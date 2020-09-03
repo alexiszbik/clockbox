@@ -1,5 +1,6 @@
 
 #include <uClock.h>
+#define ANALOG_SYNC_RATIO 4
 
 bool currentState = false;
 bool currentSwitchState = false;
@@ -18,7 +19,7 @@ void clockOutput96PPQN(uint32_t* tick) {
 
 void clockOutput32PPQN(uint32_t* tick) {
   if (currentState) {
-    if ((*tick % 2) == 0) {
+    if ((*tick % ANALOG_SYNC_RATIO ) == 0) {
       sendDigitalOut(true);
     } else {
       sendDigitalOut(false);
