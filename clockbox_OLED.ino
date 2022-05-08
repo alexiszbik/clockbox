@@ -117,6 +117,7 @@ void loop() {
     if (TickLinePosMult > 1260) { //reset if near end
       TickLinePosMult = 10;
       if (TickDirection) TickAngle = -0.70 * PI;
+      else TickAngle = -0.30 * PI;
       TickDirection = !TickDirection; //flip tick arm direction flag
     }
   }
