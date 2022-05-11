@@ -7,4 +7,4 @@ This project use uClock by midilab : https://github.com/midilab/uClock
 
 My addition to this code is an I2C OLED display which shows the tempo in BPM and a metronome animation which stays mostly in sync with the output. I know the code is not really clean nor optimized but I wrote this for a friend in like 4 hours.  
 ![](https://github.com/machmar/clockbox/blob/master/video-1651968461.gif?raw=true)  
-Sorry for the gif being rotated :(
+The displayed BPM is now without the decimal places and also centered (didnt have time to make a new video. Also, sorry for the gif being rotated :(
