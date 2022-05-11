@@ -4,7 +4,7 @@
 #include <Wire.h>
 #define ANALOG_SYNC_RATIO 4
 
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 bool currentState = false;
 bool currentSwitchState = false;
@@ -17,6 +17,12 @@ uint32_t DisplayRefreshPMill;
 uint32_t DisplayTickPMill;
 bool TickDirection;
 float TickAngle = -0.70 * PI;
+int16_t DisplayTickLineX1;
+int16_t DisplayTickLineY1;
+int16_t DisplayTickLineX2;
+int16_t DisplayTickLineY2;
+int16_t DisplayTickCircleX;
+int16_t DisplayTickCircleY;
 
 const byte pinCount = 4;
 byte digitalPinOut[pinCount] = {3, 5, 7, 9}; //Define analog clock outputs here
@@ -89,6 +95,16 @@ float FloatMap(float x, float in_min, float in_max, float out_min, float out_max
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+void DisplayCalculations() {
+  // position calculations - for page mode to be faster, calculate the nescessary values once
+    DisplayTickLineX1 = (94*cos(TickAngle))+64; //basically converting the polar coordinates (radius and angle) to cartesian coordinates (X and Y) for the ticker arm and the ticker ball
+    DisplayTickLineY1 = (94*sin(TickAngle))+96;
+    DisplayTickLineX2 = (69*cos(TickAngle))+64;
+    DisplayTickLineY2 = (69*sin(TickAngle))+96;
+    DisplayTickCircleX = (84*cos(TickAngle))+64;
+    DisplayTickCircleY = (84*sin(TickAngle))+96;
+}
+
 void loop() {
 
   int tempoPot = analogRead(A0);
@@ -114,6 +130,7 @@ void loop() {
     TickLinePosMult += map(tempo, 30, 240, 42, 344);  //calculate, how much to add to the tick arm position in order to make it tick at the right speed
     if (TickDirection) TickAngle += FloatMap(tempo, 30, 240, -0.0133333 * PI, -0.1092063 * PI); //I've came back to this code ad reworked it so it looks better (making it look more like a metronome)
     else TickAngle += FloatMap(tempo, 30, 240, 0.0133333 * PI, 0.1092063 * PI); //again, aclculationg the step to take based on the tempo
+    
     if (TickLinePosMult > 1260) { //reset if near end
       TickLinePosMult = 10;
       if (TickDirection) TickAngle = -0.70 * PI;
@@ -122,19 +139,32 @@ void loop() {
     }
   }
 
-  if (millis() - DisplayRefreshPMill > 50) {  //render the OLED
+  if (millis() - DisplayRefreshPMill > 30) {  //render the OLED
     DisplayRefreshPMill = millis();
+    DisplayCalculations();
     u8g2.clearBuffer();          // clear the internal memory
-    u8g2.drawRFrame(0, 0, 128, 28, 3);
-    u8g2.drawLine((94*cos(TickAngle))+64, (94*sin(TickAngle))+96, (69*cos(TickAngle))+64, (69*sin(TickAngle))+96);  //a whole bunch of Polar to cartesian conversions
-    u8g2.drawDisc((84*cos(TickAngle))+64, (84*sin(TickAngle))+96, 5, U8G2_DRAW_ALL);
-    u8g2.setDrawColor(0);
-    u8g2.drawBox(0, 28, 128, 35);
-    u8g2.setDrawColor(1);
-    u8g2.setFont(u8g2_font_fub35_tn); // choose a suitable font
-    u8g2.setCursor(0, 64);
-    u8g2.print(tempo);  // write something to the internal memory
-
-    u8g2.sendBuffer();          // transfer internal memory to the display
+    u8g2.firstPage();
+    uint8_t CurrentDisplayPage = 0; //using this variable to know which line (page) of the display I'm updating (useful for disabling unnescessary calculations)
+    
+    do {
+      if (CurrentDisplayPage < 4) { //drawing the top 4 rows (pages)
+        u8g2.setDrawColor(1);
+        u8g2.drawRFrame(0, 0, 128, 28, 3);
+        u8g2.drawLine(DisplayTickLineX1, DisplayTickLineY1, DisplayTickLineX2, DisplayTickLineY2);  //draw the ticker arm
+        u8g2.drawDisc(DisplayTickCircleX, DisplayTickCircleY, 5, U8G2_DRAW_ALL);
+        u8g2.setDrawColor(0);
+        u8g2.drawBox(0, 28, 128, 35);
+      }
+      if (CurrentDisplayPage > 2) { //drawing the bottom half of thew display (there is some overlap)
+        u8g2.setDrawColor(1);
+        u8g2.setFont(u8g2_font_fub35_tn); // choose a suitable font
+        char buf[4];  //buffer for the string of the number
+        sprintf(buf, "%u", (int)tempo); //make a string out of the tempo number
+        uint8_t TempoNumberWidth = u8g2.getStrWidth(buf);  //calculate the number width for centering
+        u8g2.drawStr(64-(TempoNumberWidth / 2), 64, buf);  // write something to the internal memory and se the coordinates to be in center of the bottom of the screen
+      }
+      CurrentDisplayPage++; //increment the display row (page) counter
+    }
+    while (u8g2.nextPage());          // transfer internal memory to the display
   }
 }
