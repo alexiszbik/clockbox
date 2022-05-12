@@ -117,6 +117,8 @@ void loop() {
   if ((switchState == HIGH) && !currentSwitchState) {
     toggleStartStop();
     TickLinePosMult = 10; //reset the position of the tick arm
+    TickAngle = -0.70 * PI;
+    TickDirection = 0;
     currentSwitchState = true;
   }
 
