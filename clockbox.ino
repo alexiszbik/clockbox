@@ -9,7 +9,7 @@ bool needsToSendMidiStart = false;
 const byte pinCount = 4;
 byte digitalPinOut[pinCount] = {3,5,7,9}; //Define analog clock outputs here
 
-void clockOutput96PPQN(uint32_t* tick) {
+void clockOutput96PPQN(uint32_t tick) {
   if (needsToSendMidiStart) {
     needsToSendMidiStart = false;
     Serial.write(0xFA);
@@ -17,7 +17,7 @@ void clockOutput96PPQN(uint32_t* tick) {
   Serial.write(0xF8);
 }
 
-void clockOutput32PPQN(uint32_t* tick) {
+void clockOutput32PPQN(uint32_t tick) {
   if (currentState) {
     if ((*tick % ANALOG_SYNC_RATIO ) == 0) {
       sendDigitalOut(true);
