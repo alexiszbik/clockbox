@@ -60,6 +60,8 @@ After the menu, the tempo stays where it was until you move the pot.
 
 Boîtier d'horloge pour instruments électroniques : sortie MIDI clock, 3 jacks clock/gate et une LED.
 
+👉 **Mode d'emploi détaillé, menu expliqué pas à pas : [MODE_D_EMPLOI.md](MODE_D_EMPLOI.md)**
+
 - **Potard** : tempo de 30 à 240 BPM.
 - **Bouton** : en marche, un appui arrête tout de suite. À l'arrêt, un appui court lance (au relâchement) ; tenir 1,5 s ouvre le menu.
 - **LED** : en marche, flash long sur le 1er temps et court sur les autres. À l'arrêt, éteinte.
