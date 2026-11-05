@@ -52,9 +52,22 @@ Chaque jack a son propre **mode**. Voici tous les modes, dans l'ordre où ils d�
 | **1/4** | 1 impulsion par noire | Un battement par temps |
 | **1/2** | 1 impulsion toutes les 2 noires | |
 | **Mesure** | 1 impulsion par mesure | Déclencher quelque chose à chaque mesure (la mesure se choisit : 4/4, 3/4…) |
+| **Division libre** | 1 impulsion toutes les N doubles croches (N de 1 à 64, réglé sur l'écran) | Des polyrythmes : avec N = 3, 5 ou 7, l'impulsion tourne contre la mesure et retombe sur le 1er temps de temps en temps |
 | **Reset** | 1 seule impulsion courte, au moment du Start | L'entrée « reset » d'un séquenceur, pour qu'il reparte du pas 1 en même temps que tes machines MIDI |
 | **Run** | Tension haute tant que ça tourne, 0 V à l'arrêt ou en pause | L'entrée « run » ou « start/stop » de certains séquenceurs |
 | **Euclide A, B, C** | Le rythme euclidien A, B ou C (section 4) | Déclencher une enveloppe, un module de percussion… |
+
+### Impulsion : gate ou trigger
+Pour chaque jack, sur l'écran :
+- **Gate (50 %)** (réglage d'origine) : la tension reste haute la moitié du temps. C'est ce qu'attendent la plupart des entrées d'horloge.
+- **Trigger (court)** : une impulsion très brève (environ 5 ms à 120 BPM). Pour les modules qui veulent un déclenchement court, ou quand une gate longue (sur une mesure, par exemple) gêne : une enveloppe qui resterait ouverte, un module qui compterait mal.
+
+### Le décalage
+Pour chaque jack, sur l'écran, tu peux **retarder** les impulsions de 0 à 15 doubles croches. Par exemple :
+- **1/4 décalé d'une croche (1/8)** : les impulsions tombent entre les temps, sur les contretemps. Idéal pour un charleston ouvert ou un « tchak » ;
+- **Mesure décalée d'une noire** : l'impulsion tombe sur le 2e temps au lieu du 1er.
+
+Le décalage marche pour les horloges, la mesure et la division libre. Pour les rythmes euclidiens, c'est la **rotation** qui joue ce rôle (section 4).
 
 ### La probabilité
 Chaque jack a aussi une **probabilité**, de 0 à 100 %, réglable sur l'écran (section 5), sous les modes du jack :
@@ -166,7 +179,7 @@ La boîte n'a pas d'écran, mais l'ordinateur peut en faire un : une page qui af
 
 ### Les réglages
 - **Transport et tempo** : Start, Pause / Reprendre, Stop, Début. Un **tempo précis** au dixième (par exemple 92,5) et un bouton **Tap** pour taper le tempo. Le potard reprend la main dès que tu le bouges.
-- **Les 3 jacks** : clique sur le mode voulu, il est envoyé et **enregistré tout de suite**. Le curseur **Probabilité** règle la chance que chaque impulsion parte. « Identifier » fait battre ce jack seul pendant 15 s ; « Place » indique où il est sur la boîte.
+- **Les 3 jacks** : clique sur le mode voulu, il est envoyé et **enregistré tout de suite**. Dessous : la **probabilité**, l'**impulsion** (gate ou trigger), le **décalage**, et **N** pour la division libre. « Identifier » fait battre ce jack seul pendant 15 s ; « Place » indique où il est sur la boîte.
 - **Rythmes euclidiens** : voir section 4.
 - **MIDI et mesure** :
   - la **mesure** : 4/4, 3/4, 2/4, 5/4, 6/8 ou 7/8 (pour le mode Mesure, le Reset, la LED et le métronome) ;
@@ -174,7 +187,8 @@ La boîte n'a pas d'écran, mais l'ordinateur peut en faire un : une page qui af
   - **envoyer l'horloge même à l'arrêt** : décoche si une vieille machine se met à jouer toute seule dès qu'elle reçoit l'horloge ;
   - **le bouton met en pause** : voir section 1 ;
   - le **métronome MIDI** : une note sur le 1er temps seulement, ou sur chaque temps (le 1er plus fort), avec canal et notes au choix.
-- **Préréglages** : 4 emplacements. « Enregistrer ici » garde **tout** (modes des jacks, probabilités, rythmes, MIDI, mesure). « Charger » le rappelle, « Effacer » le vide. Un préréglage se rappelle aussi depuis le menu de la boîte (4e page), sans ordinateur.
+- **Préréglages** : 4 emplacements. « Enregistrer ici » garde **tout** (modes des jacks, probabilités, rythmes, MIDI, mesure) **et le tempo du moment**. En chargeant un préréglage, son tempo revient aussi ; le potard reprend la main dès que tu le bouges.
+- **Sauvegarde** : « Exporter les réglages » télécharge un fichier `.json` avec toute ta configuration, le tempo et la place des jacks. « Importer des réglages… » le remet dans la boîte. Pratique pour garder ta configuration de concert à l'abri, la partager avec un ami qui a une clockbox, ou la remettre après une mise à jour. « Charger » le rappelle, « Effacer » le vide. Un préréglage se rappelle aussi depuis le menu de la boîte (4e page), sans ordinateur.
 - **Mise à jour du firmware** : voir section 6.
 
 Tous les réglages sont **enregistrés dans la boîte dès que tu les changes**. Tu peux débrancher l'ordinateur et partir en concert : la boîte, alimentée par un chargeur USB, démarre avec tes réglages.
@@ -198,7 +212,7 @@ Le firmware, c'est le programme qui tourne dans la boîte. Quand une nouvelle ve
 
 Si quelque chose se passe mal (câble débranché, par exemple), **la boîte n'est pas abîmée** : la partie qui permet de la mettre à jour ne s'efface jamais. Recommence simplement.
 
-Tes réglages et tes préréglages sont normalement conservés d'une version à l'autre (la 2.3 reprend ceux de la 2.2). Si un jour une version ne peut pas les reprendre, la boîte repart sur ses réglages d'origine : il suffit alors de les refaire sur l'écran.
+Tes réglages et tes préréglages sont normalement conservés d'une version à l'autre (la 2.4 reprend ceux de la 2.3 et de la 2.2). Si un jour une version ne peut pas les reprendre, la boîte repart sur ses réglages d'origine : il suffit alors de les refaire sur l'écran.
 
 ---
 

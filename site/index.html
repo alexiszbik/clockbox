@@ -6,8 +6,8 @@
 <title>clockbox — horloge MIDI et modulaire</title>
 <meta name="description" content="La clockbox : une horloge Arduino open source pour synchroniser machines MIDI et synthés modulaires. Avec son écran dans le navigateur.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1b1b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff3b30'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="screen.css?v=2.3">
-<link rel="stylesheet" href="site.css?v=2.3">
+<link rel="stylesheet" href="screen.css?v=2.4">
+<link rel="stylesheet" href="site.css?v=2.4">
 </head>
 <body>
 
@@ -97,6 +97,16 @@
     <p data-t="presetsHelp"></p>
     <div id="presets"></div>
   </div>
+  <div class="card needs-config">
+    <h2 data-t="backupTitle">Sauvegarde</h2>
+    <p data-t="backupHelp"></p>
+    <div class="fwbtns">
+      <button id="expBtn" data-t="expBtn">Exporter les réglages</button>
+      <button id="impBtn" data-t="impBtn">Importer des réglages…</button>
+      <input id="impFile" type="file" accept=".json,application/json" hidden>
+    </div>
+    <p class="small" id="backupMsg"></p>
+  </div>
   <div class="card">
     <h2 data-t="fwTitle">Mise à jour du firmware</h2>
     <p data-t="fwHelp"></p>
@@ -177,15 +187,16 @@ window.SITE_T = {
     features: `
       <div class="feat"><h3>Horloge MIDI</h3><p>24 impulsions par noire sur 2 prises MIDI, avec Start, Stop, Pause et Reprendre, et la position de départ (Song Position) pour que tout reparte au bon endroit.</p></div>
       <div class="feat"><h3>3 sorties clock/gate</h3><p>Chaque jack a son mode : 24 ppqn, doubles croches, croches, noires, blanches, mesure, triolets, croche pointée, Reset, Run ou rythme euclidien.</p></div>
+      <div class="feat"><h3>Trigger, décalage, polyrythmes</h3><p>Par jack : impulsion courte (trigger) ou gate, décalage jusqu'à 15 doubles croches (contretemps), et division libre « 1 toutes les N doubles croches » pour des polyrythmes.</p></div>
       <div class="feat"><h3>Probabilité</h3><p>Sur chaque jack et chaque rythme, une chance de 0 à 100 % que l'impulsion parte : le rythme respire et change un peu à chaque mesure.</p></div>
       <div class="feat"><h3>Rythmes euclidiens</h3><p>3 rythmes (pas, coups, rotation, probabilité) qui sortent sur les jacks et/ou jouent des notes MIDI : la boîte pilote une boîte à rythme toute seule.</p></div>
       <div class="feat"><h3>Métronome et mesures</h3><p>Une note MIDI sur le 1er temps ou sur chaque temps, en 4/4, 3/4, 2/4, 5/4, 6/8 ou 7/8.</p></div>
       <div class="feat"><h3>Reset au départ</h3><p>Une impulsion juste avant le premier coup d'horloge : ton séquenceur modulaire repart au pas 1 en même temps que tes machines MIDI.</p></div>
       <div class="feat"><h3>Tempo stable et précis</h3><p>De 30 à 240 BPM au potard, filtré. Depuis l'écran : un tempo au dixième près, ou le tap tempo.</p></div>
-      <div class="feat"><h3>4 préréglages</h3><p>Toute la configuration en mémoire, rappelable depuis l'écran ou depuis le menu de la boîte, sans ordinateur.</p></div>
+      <div class="feat"><h3>4 préréglages</h3><p>Toute la configuration et le tempo en mémoire, rappelables depuis l'écran ou depuis le menu de la boîte. Et un export en fichier pour sauvegarder ou partager.</p></div>
       <div class="feat"><h3>Mise à jour en un clic</h3><p>Le firmware s'installe depuis ce site, dans Chrome, sans logiciel Arduino.</p></div>`,
     modesTitle: "Les modes des jacks",
-    modesIntro: "Les modes d'horloge ont un rapport cyclique de 50 %. Au Start, toutes les horloges montent en même temps que le Start MIDI. Réglage d'origine : haut = 1/16, milieu = Reset, bas = 1/8. Chaque jack a aussi une probabilité (0 à 100 %) que chaque impulsion parte ; Reset et Run ne sont jamais aléatoires. Tout se choisit sur l'écran ci-dessus, ou dans le menu de la boîte.",
+    modesIntro: "Les modes d'horloge ont un rapport cyclique de 50 %. Au Start, toutes les horloges montent en même temps que le Start MIDI. Réglage d'origine : haut = 1/16, milieu = Reset, bas = 1/8. Chaque jack a aussi une probabilité (0 à 100 %), une impulsion trigger ou gate, et un décalage ; Reset et Run ne sont jamais aléatoires. Tout se choisit sur l'écran ci-dessus, ou dans le menu de la boîte.",
     modesTable: `<thead><tr><th>Mode</th><th>Signal</th><th>Pour quoi faire</th></tr></thead><tbody>
       <tr><td>24 ppqn</td><td>24 impulsions par noire</td><td>Synchro DIN des boîtes à rythme Roland, Korg…</td></tr>
       <tr><td>1/16</td><td>4 par noire (doubles croches)</td><td>L'entrée clock de la plupart des séquenceurs modulaires</td></tr>
@@ -196,6 +207,7 @@ window.SITE_T = {
       <tr><td>1/4</td><td>1 par noire</td><td>Un battement par temps</td></tr>
       <tr><td>1/2</td><td>1 toutes les 2 noires</td><td></td></tr>
       <tr><td>Mesure</td><td>1 par mesure (selon la mesure choisie)</td><td>Déclencher quelque chose à chaque mesure</td></tr>
+      <tr><td>Division libre</td><td>1 toutes les N doubles croches (N = 1 à 64)</td><td>Polyrythmes : 3, 5 ou 7 contre la mesure</td></tr>
       <tr><td>Reset</td><td>Une impulsion de 10 ms au Start</td><td>L'entrée reset d'un séquenceur : retour au pas 1</td></tr>
       <tr><td>Run</td><td>Haut tant que ça tourne</td><td>L'entrée run ou start/stop de certains séquenceurs</td></tr>
       <tr><td>Euclide A, B, C</td><td>Le rythme euclidien choisi</td><td>Déclencher une enveloppe, un module de percussion…</td></tr></tbody>`,
@@ -232,15 +244,16 @@ window.SITE_T = {
     features: `
       <div class="feat"><h3>MIDI clock</h3><p>24 pulses per quarter on 2 MIDI outputs, with Start, Stop, Pause and Continue, and the Song Position so that everything restarts at the right place.</p></div>
       <div class="feat"><h3>3 clock/gate outputs</h3><p>Each jack has its own mode: 24 ppqn, 16ths, 8ths, quarters, halves, bar, triplets, dotted 8th, Reset, Run or a Euclidean rhythm.</p></div>
+      <div class="feat"><h3>Trigger, offset, polyrhythms</h3><p>Per jack: a short trigger or a gate, an offset of up to 15 sixteenths (off-beats), and a free division “1 every N sixteenths” for polyrhythms.</p></div>
       <div class="feat"><h3>Probability</h3><p>On each jack and each rhythm, a 0 to 100 % chance that a pulse goes out: the rhythm breathes and changes a little every bar.</p></div>
       <div class="feat"><h3>Euclidean rhythms</h3><p>3 rhythms (steps, hits, rotation, probability) that go to the jacks and/or play MIDI notes: the box drives a drum machine on its own.</p></div>
       <div class="feat"><h3>Metronome and time signatures</h3><p>A MIDI note on beat 1 or on every beat, in 4/4, 3/4, 2/4, 5/4, 6/8 or 7/8.</p></div>
       <div class="feat"><h3>Reset on start</h3><p>A pulse just before the first clock: your modular sequencer goes back to step 1 together with your MIDI gear.</p></div>
       <div class="feat"><h3>Steady, exact tempo</h3><p>30 to 240 BPM from the pot, filtered. From the screen: a tempo to 0.1 BPM, or tap tempo.</p></div>
-      <div class="feat"><h3>4 presets</h3><p>The whole setup in memory, recalled from the screen or from the box menu, without a computer.</p></div>
+      <div class="feat"><h3>4 presets</h3><p>The whole setup and the tempo in memory, recalled from the screen or the box menu. Plus a file export to back up or share.</p></div>
       <div class="feat"><h3>One-click update</h3><p>The firmware installs from this site, in Chrome, without the Arduino software.</p></div>`,
     modesTitle: "The jack modes",
-    modesIntro: "Clock modes have a 50 % duty cycle. On start, every clock goes high together with the MIDI Start. Defaults: top = 1/16, middle = Reset, bottom = 1/8. Each jack also has a probability (0 to 100 %) that each pulse goes out; Reset and Run are never random. Everything is chosen on the screen above, or in the box menu.",
+    modesIntro: "Clock modes have a 50 % duty cycle. On start, every clock goes high together with the MIDI Start. Defaults: top = 1/16, middle = Reset, bottom = 1/8. Each jack also has a probability (0 to 100 %), a trigger or gate pulse, and an offset; Reset and Run are never random. Everything is chosen on the screen above, or in the box menu.",
     modesTable: `<thead><tr><th>Mode</th><th>Signal</th><th>Use</th></tr></thead><tbody>
       <tr><td>24 ppqn</td><td>24 pulses per quarter</td><td>DIN sync for Roland, Korg… drum machines</td></tr>
       <tr><td>1/16</td><td>4 per quarter (16ths)</td><td>The clock input of most modular sequencers</td></tr>
@@ -251,6 +264,7 @@ window.SITE_T = {
       <tr><td>1/4</td><td>1 per quarter</td><td>One pulse per beat</td></tr>
       <tr><td>1/2</td><td>1 every 2 quarters</td><td></td></tr>
       <tr><td>Bar</td><td>1 per bar (chosen time signature)</td><td>Trigger something every bar</td></tr>
+      <tr><td>Free division</td><td>1 every N sixteenths (N = 1 to 64)</td><td>Polyrhythms: 3, 5 or 7 against the bar</td></tr>
       <tr><td>Reset</td><td>A 10 ms pulse on start</td><td>A sequencer's reset input: back to step 1</td></tr>
       <tr><td>Run</td><td>High while running</td><td>The run or start/stop input of some sequencers</td></tr>
       <tr><td>Euclid A, B, C</td><td>The chosen Euclidean rhythm</td><td>Trigger an envelope, a drum module…</td></tr></tbody>`,
@@ -276,6 +290,6 @@ window.SITE_T = {
   }
 };
 </script>
-<script src="screen.js?v=2.3"></script>
+<script src="screen.js?v=2.4"></script>
 </body>
 </html>

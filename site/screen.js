@@ -24,7 +24,10 @@ const T = {
     tempoHelp: "Tape un tempo précis (au dixième) ou tape le rythme sur « Tap ». Le potard reprend la main dès que tu le bouges.",
     jacksTitle: "Les 3 jacks",
     jacksHelp: "Clique un mode : il est envoyé à la boîte et enregistré tout de suite. « Identifier » fait battre ce jack seul pendant 15 s, pour savoir lequel est lequel.",
-    groups: ["Horloges", "Triolets et pointées", "Transport", "Rythmes euclidiens"],
+    groups: ["Horloges", "Triolets, pointées et divisions libres", "Transport", "Rythmes euclidiens"],
+    pulse: "Impulsion", pulseOpts: ["Gate (50 %)", "Trigger (court)"], offset: "Décalage", offNone: "aucun", divN: "N doubles croches",
+    expBtn: "Exporter les réglages", impBtn: "Importer des réglages…", impOk: "Réglages importés", impBad: "Fichier de réglages invalide : {e}",
+    backupHelp: "Garde ta configuration dans un fichier (.json) : pour la sauvegarder, la partager avec un ami qui a une clockbox, ou la remettre plus tard. Le tempo et la place des jacks sont inclus.", backupTitle: "Sauvegarde",
     euclidTitle: "Rythmes euclidiens",
     euclidHelp: "Un rythme euclidien répartit des coups le plus régulièrement possible sur un nombre de pas : 3 coups sur 8 donnent le tresillo, 5 sur 16 une bossa… Chaque rythme peut sortir sur un jack (mode « Euclide A/B/C ») et/ou jouer une note MIDI, pour piloter une boîte à rythme.",
     euSteps: "Pas", euHits: "Coups", euRot: "Rotation", euDiv: "Durée d'un pas", euMidi: "Jouer une note MIDI",
@@ -38,7 +41,7 @@ const T = {
     metro: "Métronome MIDI", metroModes: ["Éteint", "1er temps seulement", "Chaque temps"],
     metroDown: "Note du 1er temps", metroBeat: "Note des autres temps",
     presetsTitle: "Préréglages",
-    presetsHelp: "4 emplacements dans la boîte pour tout garder : modes des jacks, rythmes, MIDI, mesure. Le 4e écran du menu de la boîte permet de les rappeler sans ordinateur.",
+    presetsHelp: "4 emplacements dans la boîte pour tout garder : modes des jacks, rythmes, MIDI, mesure et tempo. Le 4e écran du menu de la boîte permet de les rappeler sans ordinateur.",
     pLoad: "Charger", pSave: "Enregistrer ici", pErase: "Effacer", pFilled: "enregistré", pEmpty: "vide",
     pConfirmSave: "Remplacer le préréglage {n} par les réglages actuels ?",
     fwTitle: "Mise à jour du firmware",
@@ -49,7 +52,7 @@ const T = {
     fwNoHex: "Le fichier du firmware n'est pas disponible ici (page ouverte depuis le disque ?) : choisis un fichier .hex.",
     fwSteps: ["Connexion au bootloader…", "Écriture…", "Vérification…", "Terminé !"],
     fwDone: "Firmware installé. La boîte redémarre.", fwFail: "Échec de la mise à jour : {e}. La boîte n'est pas abîmée : réessaie.",
-    fwSettings: "Tes réglages et préréglages sont conservés d'une version à l'autre quand c'est possible (la 2.3 reprend ceux de la 2.2).",
+    fwSettings: "Tes réglages et préréglages sont conservés d'une version à l'autre quand c'est possible (la 2.4 reprend ceux de la 2.2 et de la 2.3). Par précaution, exporte-les avant (carte Sauvegarde).",
     infoTitle: "État", howTitle: "Rappel des commandes", logTitle: "Journal",
     howList: [
       "<b>Potard</b> : tempo, 30 à 240 BPM.",
@@ -61,9 +64,9 @@ const T = {
     k_fw: "Firmware", k_bpm: "Tempo", k_meas: "Tempo mesuré (horloge MIDI)", k_state: "Transport", k_pos: "Position",
     k_pot: "Potard", k_btn: "Bouton", down: "enfoncé", up: "relâché",
     noState: "Pas de réponse d'état : la boîte a sans doute un très ancien firmware. Le tempo et le start/stop restent affichés depuis l'horloge MIDI.",
-    modes: ["24 ppqn", "1/16", "1/8", "1/4", "1/2", "Mesure", "Reset", "Run", "1/8 triolet", "1/16 triolet", "1/8 pointée", "Euclide A", "Euclide B", "Euclide C"],
-    modeShort: ["24pq", "1/16", "1/8", "1/4", "1/2", "Mes.", "Reset", "Run", "1/8T", "1/16T", "1/8.", "Eu.A", "Eu.B", "Eu.C"],
-    modeDesc: ["DIN sync", "doubles cr.", "croches", "noires", "blanches", "1 / mesure", "au start", "gate", "3 / noire", "6 / noire", "pointée", "rythme A", "rythme B", "rythme C"],
+    modes: ["24 ppqn", "1/16", "1/8", "1/4", "1/2", "Mesure", "Reset", "Run", "1/8 triolet", "1/16 triolet", "1/8 pointée", "Euclide A", "Euclide B", "Euclide C", "Division libre"],
+    modeShort: ["24pq", "1/16", "1/8", "1/4", "1/2", "Mes.", "Reset", "Run", "1/8T", "1/16T", "1/8.", "Eu.A", "Eu.B", "Eu.C", "1/N"],
+    modeDesc: ["DIN sync", "doubles cr.", "croches", "noires", "blanches", "1 / mesure", "au start", "gate", "3 / noire", "6 / noire", "pointée", "rythme A", "rythme B", "rythme C", "1 / N doubles"],
   },
   en: {
     title: "clockbox — screen", connect: "Connect the box", disconnect: "Disconnect",
@@ -85,7 +88,10 @@ const T = {
     tempoHelp: "Type an exact tempo (to 0.1) or tap the beat on “Tap”. The pot takes over as soon as you move it.",
     jacksTitle: "The 3 jacks",
     jacksHelp: "Click a mode: it is sent to the box and saved right away. “Identify” makes only this jack pulse for 15 s, to find which is which.",
-    groups: ["Clocks", "Triplets and dotted", "Transport", "Euclidean rhythms"],
+    groups: ["Clocks", "Triplets, dotted and free divisions", "Transport", "Euclidean rhythms"],
+    pulse: "Pulse", pulseOpts: ["Gate (50 %)", "Trigger (short)"], offset: "Offset", offNone: "none", divN: "N sixteenths",
+    expBtn: "Export settings", impBtn: "Import settings…", impOk: "Settings imported", impBad: "Invalid settings file: {e}",
+    backupHelp: "Keep your setup in a file (.json): to back it up, share it with a friend who has a clockbox, or restore it later. Tempo and jack places are included.", backupTitle: "Backup",
     euclidTitle: "Euclidean rhythms",
     euclidHelp: "A Euclidean rhythm spreads hits as evenly as possible over a number of steps: 3 hits over 8 is the tresillo, 5 over 16 a bossa… Each rhythm can go to a jack (mode “Euclid A/B/C”) and/or play a MIDI note, to drive a drum machine.",
     euSteps: "Steps", euHits: "Hits", euRot: "Rotation", euDiv: "Step length", euMidi: "Play a MIDI note",
@@ -99,7 +105,7 @@ const T = {
     metro: "MIDI metronome", metroModes: ["Off", "Beat 1 only", "Every beat"],
     metroDown: "Beat 1 note", metroBeat: "Other beats note",
     presetsTitle: "Presets",
-    presetsHelp: "4 slots in the box to keep everything: jack modes, rhythms, MIDI, time signature. The 4th page of the box menu recalls them without a computer.",
+    presetsHelp: "4 slots in the box to keep everything: jack modes, rhythms, MIDI, time signature and tempo. The 4th page of the box menu recalls them without a computer.",
     pLoad: "Load", pSave: "Save here", pErase: "Erase", pFilled: "saved", pEmpty: "empty",
     pConfirmSave: "Replace preset {n} with the current settings?",
     fwTitle: "Firmware update",
@@ -110,7 +116,7 @@ const T = {
     fwNoHex: "The firmware file is not available here (page opened from disk?): pick a .hex file.",
     fwSteps: ["Talking to the bootloader…", "Writing…", "Verifying…", "Done!"],
     fwDone: "Firmware installed. The box restarts.", fwFail: "Update failed: {e}. The box is not harmed: try again.",
-    fwSettings: "Your settings and presets are kept from one version to the next whenever possible (2.3 keeps those of 2.2).",
+    fwSettings: "Your settings and presets are kept from one version to the next whenever possible (2.4 keeps those of 2.2 and 2.3). To be safe, export them first (Backup card).",
     infoTitle: "Status", howTitle: "Controls", logTitle: "Log",
     howList: [
       "<b>Pot</b>: tempo, 30 to 240 BPM.",
@@ -122,9 +128,9 @@ const T = {
     k_fw: "Firmware", k_bpm: "Tempo", k_meas: "Measured tempo (MIDI clock)", k_state: "Transport", k_pos: "Position",
     k_pot: "Pot", k_btn: "Button", down: "pressed", up: "released",
     noState: "No status reply: the box probably runs a very old firmware. Tempo and start/stop are still shown from the MIDI clock.",
-    modes: ["24 ppqn", "1/16", "1/8", "1/4", "1/2", "Bar", "Reset", "Run", "1/8 triplet", "1/16 triplet", "Dotted 1/8", "Euclid A", "Euclid B", "Euclid C"],
-    modeShort: ["24pq", "1/16", "1/8", "1/4", "1/2", "Bar", "Reset", "Run", "1/8T", "1/16T", "1/8.", "Eu.A", "Eu.B", "Eu.C"],
-    modeDesc: ["DIN sync", "16ths", "8ths", "quarters", "halves", "1 / bar", "on start", "gate", "3 / quarter", "6 / quarter", "dotted", "rhythm A", "rhythm B", "rhythm C"],
+    modes: ["24 ppqn", "1/16", "1/8", "1/4", "1/2", "Bar", "Reset", "Run", "1/8 triplet", "1/16 triplet", "Dotted 1/8", "Euclid A", "Euclid B", "Euclid C", "Free division"],
+    modeShort: ["24pq", "1/16", "1/8", "1/4", "1/2", "Bar", "Reset", "Run", "1/8T", "1/16T", "1/8.", "Eu.A", "Eu.B", "Eu.C", "1/N"],
+    modeDesc: ["DIN sync", "16ths", "8ths", "quarters", "halves", "1 / bar", "on start", "gate", "3 / quarter", "6 / quarter", "dotted", "rhythm A", "rhythm B", "rhythm C", "1 / N 16ths"],
   }
 };
 if (window.SITE_T) for (const l in window.SITE_T) Object.assign(T[l], window.SITE_T[l]);
@@ -135,16 +141,17 @@ const tf = (k, o) => t(k).replace(/\{(\w+)\}/g, (_, x) => o[x]);
 
 // ------------------------------------------------------------- constants --
 const LONG_PRESS_MS = 1500, IDENTIFY_MS = 15000;
-const MODE_COUNT = 14;
-const POT_ORDER = [0, 1, 9, 2, 8, 10, 3, 4, 5, 6, 7, 11, 12, 13];
-const MODE_GROUPS = [[0, 1, 2, 3, 4, 5], [9, 8, 10], [6, 7], [11, 12, 13]];
-const PERIOD24 = [1, 6, 12, 24, 48, 0, 0, 0, 8, 4, 18, 0, 0, 0];   // plain clocks, in MIDI clock ticks
+const MODE_COUNT = 15;
+const POT_ORDER = [0, 1, 9, 2, 8, 10, 3, 4, 5, 14, 6, 7, 11, 12, 13];
+const MODE_GROUPS = [[0, 1, 2, 3, 4, 5], [9, 8, 10, 14], [6, 7], [11, 12, 13]];
+const PERIOD24 = [1, 6, 12, 24, 48, 0, 0, 0, 8, 4, 18, 0, 0, 0, 0];   // plain clocks, in MIDI clock ticks
 const TIME_SIGS = ["4/4", "3/4", "2/4", "5/4", "6/8", "7/8"];
 const BAR24 = [96, 72, 48, 120, 72, 84], BEAT24 = [24, 24, 24, 24, 36, 12];
 const EU_DIV24 = [6, 12, 4, 24];
 const PRESS_STOPPED = 1, PRESS_MENU = 2, PRESS_PAUSED = 3;
 const STOPPED = 0, PLAYING = 1, PAUSED = 2;
-const CONFIG_SIZE = 41, CONFIG_SIZE_V22 = 35;
+const CONFIG_SIZE = 50, CONFIG_SIZE_V23 = 41, CONFIG_SIZE_V22 = 35;
+const configSizeFor = fw => fw >= 24 ? CONFIG_SIZE : fw === 23 ? CONFIG_SIZE_V23 : CONFIG_SIZE_V22;
 const GM = { 35: "kick", 36: "kick", 37: "rim", 38: "snare", 39: "clap", 40: "snare 2", 41: "tom", 42: "hat", 44: "pedal hat", 45: "tom", 46: "open hat", 47: "tom", 49: "crash", 50: "tom", 51: "ride", 54: "tamb.", 56: "cowbell", 60: "bongo", 62: "conga", 69: "cabasa", 70: "maracas", 75: "claves", 76: "wood hi", 77: "wood lo" };
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const noteName = n => NOTE_NAMES[n % 12] + (Math.floor(n / 12) - 2);   // 60 = C3
@@ -185,7 +192,10 @@ function decodeConfig(d, size = CONFIG_SIZE) {
   const c = { jackMode: [d[0], d[1], d[2]], timeSig: d[3], clockWhenStopped: d[4], songPosition: d[5], buttonPauses: d[6],
     metroMode: d[7], metroChannel: d[8], metroNoteDown: d[9], metroNoteBeat: d[10], euclid: [], presetMask: d[size] || 0,
     jackProb: size >= 41 ? [d[35], d[36], d[37]] : [100, 100, 100],
-    euclidProb: size >= 41 ? [d[38], d[39], d[40]] : [100, 100, 100] };
+    euclidProb: size >= 41 ? [d[38], d[39], d[40]] : [100, 100, 100],
+    jackTrigger: size >= 50 ? [d[41], d[42], d[43]] : [0, 0, 0],
+    jackOffset: size >= 50 ? [d[44], d[45], d[46]] : [0, 0, 0],
+    jackDivision: size >= 50 ? [d[47], d[48], d[49]] : [3, 3, 3] };
   for (let g = 0; g < 3; g++) {
     const o = 11 + g * 8;
     c.euclid.push({ steps: d[o], hits: d[o + 1], rotation: d[o + 2], division: d[o + 3], midi: d[o + 4],
@@ -198,7 +208,7 @@ function encodeConfig(c) {
   const b = [...c.jackMode, c.timeSig, c.clockWhenStopped, c.songPosition, c.buttonPauses,
     c.metroMode, c.metroChannel, c.metroNoteDown, c.metroNoteBeat];
   for (const e of c.euclid) b.push(e.steps, e.hits, e.rotation, e.division, e.midi, e.channel, e.note, e.velocity);
-  b.push(...c.jackProb, ...c.euclidProb);   // ignored by firmware 2.2
+  b.push(...c.jackProb, ...c.euclidProb, ...c.jackTrigger, ...c.jackOffset, ...c.jackDivision);   // older firmware ignores the tail
   return b;
 }
 
@@ -236,7 +246,7 @@ function onState(d) {
 
 function onConfig(d) {
   if (configTimer) return;   // a local edit is about to be sent; the box will echo it
-  C = decodeConfig(d, S && S.fwNum < 23 ? CONFIG_SIZE_V22 : CONFIG_SIZE);
+  C = decodeConfig(d, configSizeFor(S ? S.fwNum : 24));
   if (S) C.jackMode = S.modes.slice();
   renderPanel(); renderSettings();
 }
@@ -490,7 +500,7 @@ async function flashFromSite() {
 // -------------------------------------------------------------------- demo --
 function defaultConfig() {
   return { jackMode: [1, 6, 2], timeSig: 0, clockWhenStopped: 1, songPosition: 1, buttonPauses: 0,
-    jackProb: [100, 100, 100], euclidProb: [100, 100, 70],
+    jackProb: [100, 100, 100], euclidProb: [100, 100, 70], jackTrigger: [0, 0, 0], jackOffset: [0, 0, 0], jackDivision: [3, 3, 3],
     metroMode: 0, metroChannel: 9, metroNoteDown: 76, metroNoteBeat: 77, presetMask: 0,
     euclid: [{ steps: 16, hits: 5, rotation: 0, division: 0, midi: 1, channel: 9, note: 36, velocity: 110 },
              { steps: 8, hits: 3, rotation: 0, division: 0, midi: 1, channel: 9, note: 38, velocity: 100 },
@@ -529,7 +539,7 @@ function stopDemo() {
 }
 function demoPush() {
   const D = demo.D, b10 = Math.round(D.bpm * 10), p16 = Math.floor(Math.max(0, clock.songTick) / 6);
-  onState([2, 3, b10 >> 7, b10 & 0x7F, D.transport, +D.menu, D.menuPage, D.menuPreset, D.pot >> 7, D.pot & 0x7F,
+  onState([2, 4, b10 >> 7, b10 & 0x7F, D.transport, +D.menu, D.menuPage, D.menuPreset, D.pot >> 7, D.pot & 0x7F,
     +D.button, D.press, +D.tempoArmed, +D.menuArmed, D.ident < 0 ? 0x7F : D.ident, ...D.pos, p16 >> 7, p16 & 0x7F, ...D.modes]);
   const mask = demo.presets.reduce((m, p, i) => m | (p ? 1 << i : 0), 0);
   configTimer = null;
@@ -570,15 +580,25 @@ function euHit(e, step) {
   const i = (step + e.steps - (e.rotation % e.steps)) % e.steps;
   return (i * e.hits) % e.steps < e.hits;
 }
-function levelAt(mode, t24, preview, now) {
-  const ts = C ? C.timeSig : 0, p = PERIOD24[mode];
-  if (p) return p === 1 ? (t24 & 1) === 0 : t24 % p < p / 2;
-  if (mode === 5) return t24 % BAR24[ts] < BAR24[ts] / 2;
+// Same rules as jackPhase() in the firmware, at MIDI clock resolution.
+function levelAt(mode, t24, preview, now, j) {
+  const ts = C ? C.timeSig : 0, trig = C && j != null ? C.jackTrigger[j] : 0;
+  const off = C && j != null ? C.jackOffset[j] * 6 : 0;
+  const wrap = (x, L) => ((x - off) % L + L) % L;
   if (mode === 7) return true;
   if (mode === 6) return preview ? t24 % BAR24[ts] < 1 : now - clock.startFlash < 120;
-  if (!C) return false;
-  const e = C.euclid[mode - 11], div = EU_DIV24[e.division];
-  return euHit(e, Math.floor(t24 / div) % e.steps) && t24 % div < div / 2;
+  let L, ph, hit = true;
+  if (PERIOD24[mode]) { L = PERIOD24[mode]; ph = wrap(t24, L); }
+  else if (mode === 5) { L = BAR24[ts]; ph = wrap(t24, L); }
+  else if (mode === 14) { L = (C ? C.jackDivision[j != null ? j : 0] : 3) * 6; ph = wrap(t24, L); }
+  else {
+    if (!C) return false;
+    const e = C.euclid[mode - 11];
+    L = EU_DIV24[e.division]; ph = t24 % L;
+    hit = euHit(e, Math.floor(t24 / L) % e.steps);
+  }
+  if (L === 1) return hit && (t24 & 1) === 0;
+  return hit && (trig ? ph === 0 : ph < L / 2);
 }
 
 // --------------------------------------------------------------- rendering --
@@ -657,7 +677,7 @@ function frame() {
 
   let led = false;
   if (S && S.ident >= 0) led = clock.freeTick % 24 < 12;
-  else if (S && S.menu) led = S.menuPage < 3 ? levelAt(S.modes[S.menuPage], clock.freeTick, true, now) : (now % 1200) < 200;
+  else if (S && S.menu) led = S.menuPage < 3 ? levelAt(S.modes[S.menuPage], clock.freeTick, true, now, S.menuPage) : (now % 1200) < 200;
   else if (tr === PLAYING) led = st % BAR24[ts] < 6 || (st % BAR24[ts]) % BEAT24[ts] < 2;
   else if (tr === PAUSED) led = clock.freeTick % 48 < 3;
   $("led").classList.toggle("on", led && conn !== "off");
@@ -667,8 +687,8 @@ function frame() {
     let on = false;
     if (S) {
       if (S.ident >= 0) on = j === S.ident && clock.freeTick % 24 < 12;
-      else if (S.menu) on = j === S.menuPage && levelAt(S.modes[j], clock.freeTick, true, now);
-      else on = tr === PLAYING && levelAt(S.modes[j], st, false, now);
+      else if (S.menu) on = j === S.menuPage && levelAt(S.modes[j], clock.freeTick, true, now, j);
+      else on = tr === PLAYING && levelAt(S.modes[j], st, false, now, j);
     }
     el.classList.toggle("on", on);
     el.classList.toggle("ident", !!S && S.ident === j);
@@ -731,7 +751,8 @@ function renderPanel() {
   // jacks
   const canIdent = live && tr !== PLAYING && !S.menu;
   const order = S ? [0, 1, 2].sort((a, b) => S.pos[a] - S.pos[b]) : [0, 1, 2];
-  const maxMode = live && !v22 ? 8 : MODE_COUNT;
+  const v24 = live && S.fwNum >= 24;
+  const maxMode = !live || v24 ? MODE_COUNT : v22 ? 14 : 8;
   $("jackRows").innerHTML = order.map(j => {
     const mode = S ? S.modes[j] : -1, identOn = S && S.ident === j;
     const places = t("places").map((p, i) => `<option value="${i}" ${S && S.pos[j] === i ? "selected" : ""}>${esc(p)}</option>`).join("");
@@ -745,7 +766,12 @@ function renderPanel() {
         <label>${esc(t("place"))} <select data-pos="${j}" ${live ? "" : "disabled"}>${places}</select></label>
         <button data-ident="${j}" class="${identOn ? "ident-on" : ""}" ${canIdent || identOn ? "" : "disabled"} title="${canIdent ? "" : esc(t("identDisabled"))}">${esc(identOn ? t("identStop") : t("identBtn"))}</button>
       </div>${groups}
-      ${field(t("prob"), `<input type="range" min="0" max="100" step="5" data-jp="${j}" ${live && S.fwNum >= 23 ? "" : "disabled"}><output></output>`)}</div>`;
+      ${field(t("prob"), `<input type="range" min="0" max="100" step="5" data-jp="${j}" ${live && S.fwNum >= 23 ? "" : "disabled"}><output></output>`)}
+      <div class="jx">
+        ${field(t("pulse"), `<select data-jt="${j}" ${v24 && mode !== 6 && mode !== 7 ? "" : "disabled"}>${t("pulseOpts").map((o, i) => `<option value="${i}">${esc(o)}</option>`).join("")}</select>`)}
+        ${field(t("offset"), `<select data-jo="${j}" ${v24 && (mode <= 5 || (mode >= 8 && mode <= 10) || mode === 14) ? "" : "disabled"}>${Array.from({ length: 16 }, (_, i) => `<option value="${i}">${esc(offsetLabel(i))}</option>`).join("")}</select>`)}
+        ${mode === 14 ? field(t("divN"), `<input type="number" min="1" max="64" data-jn="${j}" ${v24 ? "" : "disabled"}>`) : ""}
+      </div></div>`;
   }).join("");
   syncJackProb();
 }
@@ -863,12 +889,76 @@ function renderEuclidLive(now) {
   });
 }
 
+function offsetLabel(n) {
+  const names = { 0: t("offNone"), 1: "1/16", 2: "1/8", 3: "3/16", 4: "1/4", 6: "3/8", 8: "1/2", 12: "3/4" };
+  return names[n] || n + "/16";
+}
 function syncJackProb() {
   document.querySelectorAll("[data-jp]").forEach(el => {
     const j = +el.dataset.jp, v = C ? C.jackProb[j] : 100;
     setVal(el, v);
     el.nextElementSibling.textContent = v + " %";
   });
+  if (!C) return;
+  document.querySelectorAll("[data-jt]").forEach(el => setVal(el, C.jackTrigger[+el.dataset.jt]));
+  document.querySelectorAll("[data-jo]").forEach(el => setVal(el, C.jackOffset[+el.dataset.jo]));
+  document.querySelectorAll("[data-jn]").forEach(el => setVal(el, C.jackDivision[+el.dataset.jn]));
+}
+
+// ------------------------------------------------------------ export / import --
+function exportSettings() {
+  if (!C || !S) return;
+  const { presetMask, ...config } = C;
+  const data = { app: "clockbox", format: 1, firmware: S.fw, tempo: S.bpm, positions: S.pos, config };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `clockbox-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  log("réglages exportés");
+}
+
+function checkConfig(src) {
+  const c = defaultConfig(), int = (v, lo, hi) => {
+    if (!Number.isInteger(v) || v < lo || v > hi) throw new Error(`valeur hors limites (${v})`);
+    return v;
+  };
+  const arr = (a, n, lo, hi, def) => a == null ? def : (Array.isArray(a) && a.length === n ? a.map(v => int(v, lo, hi)) : (() => { throw new Error("tableau invalide"); })());
+  c.jackMode = arr(src.jackMode, 3, 0, MODE_COUNT - 1, c.jackMode);
+  for (const [k, hi] of [["timeSig", 5], ["clockWhenStopped", 1], ["songPosition", 1], ["buttonPauses", 1], ["metroMode", 2], ["metroChannel", 15], ["metroNoteDown", 127], ["metroNoteBeat", 127]])
+    if (src[k] != null) c[k] = int(src[k], 0, hi);
+  if (src.euclid) {
+    if (!Array.isArray(src.euclid) || src.euclid.length !== 3) throw new Error("rythmes invalides");
+    c.euclid = src.euclid.map(e => {
+      const steps = int(e.steps, 1, 32);
+      return { steps, hits: int(e.hits, 0, steps), rotation: int(e.rotation, 0, steps - 1), division: int(e.division, 0, 3),
+        midi: int(e.midi, 0, 1), channel: int(e.channel, 0, 15), note: int(e.note, 0, 127), velocity: int(e.velocity, 1, 127) };
+    });
+  }
+  c.jackProb = arr(src.jackProb, 3, 0, 100, c.jackProb);
+  c.euclidProb = arr(src.euclidProb, 3, 0, 100, c.euclidProb);
+  c.jackTrigger = arr(src.jackTrigger, 3, 0, 1, c.jackTrigger);
+  c.jackOffset = arr(src.jackOffset, 3, 0, 15, c.jackOffset);
+  c.jackDivision = arr(src.jackDivision, 3, 1, 64, c.jackDivision);
+  return c;
+}
+
+async function importSettings(file) {
+  try {
+    const data = JSON.parse(await file.text());
+    if (!data || data.app !== "clockbox" || !data.config) throw new Error("ce n'est pas un fichier clockbox");
+    const c = checkConfig(data.config);
+    if (S && S.fwNum < 24) c.jackMode = c.jackMode.map(m => m < (S.fwNum >= 22 ? 14 : 8) ? m : 1);
+    await send(enc(0x14, ...encodeConfig(c)));
+    for (let j = 0; j < 3; j++) await send(enc(0x11, j, c.jackMode[j]));
+    const pos = data.positions;
+    if (Array.isArray(pos) && pos.length === 3 && [...pos].sort().join() === "0,1,2") await send(enc(0x13, ...pos));
+    if (typeof data.tempo === "number" && data.tempo >= 20 && data.tempo <= 300) sendTempo(data.tempo);
+    log(t("impOk")); $("backupMsg").textContent = t("impOk");
+  } catch (e) {
+    log(tf("impBad", { e: e.message })); $("backupMsg").textContent = tf("impBad", { e: e.message });
+  }
 }
 
 // ------------------------------------------------------------------ events --
@@ -884,10 +974,17 @@ $("jackRows").addEventListener("change", e => {
   send(enc(0x13, ...pos));
 });
 $("jackRows").addEventListener("input", e => {
-  const el = e.target.closest("[data-jp]"); if (!el) return;
-  const j = +el.dataset.jp, v = Math.round(+el.value);
-  el.nextElementSibling.textContent = v + " %";
-  editConfig(c => { c.jackProb[j] = v; });
+  const el = e.target;
+  if (el.dataset.jp != null) {
+    const j = +el.dataset.jp, v = Math.round(+el.value);
+    el.nextElementSibling.textContent = v + " %";
+    editConfig(c => { c.jackProb[j] = v; });
+  } else if (el.dataset.jt != null) editConfig(c => { c.jackTrigger[+el.dataset.jt] = +el.value; });
+  else if (el.dataset.jo != null) editConfig(c => { c.jackOffset[+el.dataset.jo] = +el.value; });
+  else if (el.dataset.jn != null) {
+    const v = Math.round(+el.value);
+    if (v >= 1 && v <= 64) editConfig(c => { c.jackDivision[+el.dataset.jn] = v; });
+  }
 });
 $("euclids").addEventListener("input", e => {
   const el = e.target.closest("[data-k]"); if (!el) return;
@@ -934,6 +1031,9 @@ $("fwUpdate").addEventListener("click", () => {
   flashFromSite();
 });
 $("fwFileBtn").addEventListener("click", () => $("fwFile").click());
+$("expBtn").addEventListener("click", exportSettings);
+$("impBtn").addEventListener("click", () => $("impFile").click());
+$("impFile").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) importSettings(f); });
 $("fwFile").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = "";
   if (!f) return;

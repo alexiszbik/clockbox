@@ -231,3 +231,6 @@
   .pbar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 120ms; }
   .ring .lbl.sm { font-size: 9px; font-weight: 400; fill: var(--muted); }
   .jackrow .fld { margin-top: 4px; }
+  .jx { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0 14px; }
+  .jx .fld { grid-template-columns: auto 1fr; }
+  .jx select, .jx input { width: 100%; }

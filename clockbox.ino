@@ -5,7 +5,8 @@
  * Original project by Alexis Zbik (2020).
  * v2 (2026): one mode per jack (clocks, triplets, dotted, reset, run,
  * Euclidean rhythms) with an optional probability per jack, Euclidean
- * rhythms (with probability) and metronome as MIDI notes, time
+ * rhythms (with probability) and metronome as MIDI notes, free divisions,
+ * per-jack offset and trigger/gate length, time
  * signatures, song position, pause/continue, presets, beat LED, steady tempo,
  * settings menu, and a screen in the web browser.
  *
@@ -70,15 +71,16 @@ enum Mode : uint8_t {
   MODE_EUCLID_A,        // Euclidean rhythm A, B, C
   MODE_EUCLID_B,
   MODE_EUCLID_C,
+  MODE_DIVISION,        // 1 pulse every N sixteenths (N per jack, 1..64): polyrhythms
   MODE_COUNT
 };
 // Clock periods in ticks (50 % duty), 0 = not a plain clock.
-const uint16_t MODE_PERIOD[MODE_COUNT] = {4, 24, 48, 96, 192, 0, 0, 0, 32, 16, 72, 0, 0, 0};
+const uint16_t MODE_PERIOD[MODE_COUNT] = {4, 24, 48, 96, 192, 0, 0, 0, 32, 16, 72, 0, 0, 0, 0};
 const uint16_t CYCLE_TICKS = 576;     // common multiple of every period above
 // Order of the modes along the pot, in the box menu.
 const uint8_t POT_ORDER[MODE_COUNT] = {
   MODE_24PPQN, MODE_16TH, MODE_16TH_TRIPLET, MODE_8TH, MODE_8TH_TRIPLET, MODE_8TH_DOTTED,
-  MODE_QUARTER, MODE_HALF, MODE_BAR, MODE_RESET, MODE_RUN, MODE_EUCLID_A, MODE_EUCLID_B, MODE_EUCLID_C
+  MODE_QUARTER, MODE_HALF, MODE_BAR, MODE_DIVISION, MODE_RESET, MODE_RUN, MODE_EUCLID_A, MODE_EUCLID_B, MODE_EUCLID_C
 };
 
 // Time signatures: 4/4 3/4 2/4 5/4 6/8 7/8 (bar length and LED beat, in ticks)
@@ -118,9 +120,15 @@ struct Config {             // what a preset holds; every byte is 0..127 (fits S
   // added in 2.3 (kept at the end so that 2.2 settings can be migrated)
   uint8_t jackProb[JACK_COUNT];     // 0..100 %: chance that each pulse of the jack is sent
   uint8_t euclidProb[EUCLID_COUNT]; // 0..100 %: chance that each hit of the rhythm plays
+  // added in 2.4
+  uint8_t jackTrigger[JACK_COUNT];  // 0 = gate (50 %), 1 = short trigger (one tick, ~5 ms at 120 BPM)
+  uint8_t jackOffset[JACK_COUNT];   // delay in sixteenths, 0..15 (clocks, bar and division modes)
+  uint8_t jackDivision[JACK_COUNT]; // N for MODE_DIVISION, in sixteenths, 1..64
 };
-const uint8_t CONFIG_SIZE = sizeof(Config);   // 41
+const uint8_t CONFIG_SIZE = sizeof(Config);   // 50
 const uint8_t CONFIG_SIZE_V3 = 35;            // firmware 2.2
+const uint8_t CONFIG_SIZE_V4 = 41;            // firmware 2.3
+const uint8_t MAX_OFFSET = 15, MAX_DIVISION = 64;
 
 const Config DEFAULT_CONFIG = {
   {MODE_16TH, MODE_RESET, MODE_8TH},
@@ -130,16 +138,20 @@ const Config DEFAULT_CONFIG = {
    { 8, 3, 0, 0, 0, 9, 38, 100},                 // B: tresillo, snare
    {16, 7, 0, 0, 0, 9, 42, 80}},                 // C: 7 over 16, closed hat
   {100, 100, 100},
-  {100, 100, 100}
+  {100, 100, 100},
+  {0, 0, 0},
+  {0, 0, 0},
+  {3, 3, 3}
 };
 
-// EEPROM layout: 'C' 'B' version, positions[3], config at 8, presets at 64 (48 bytes each)
-const uint8_t  EEPROM_MAGIC0 = 'C', EEPROM_MAGIC1 = 'B', EEPROM_VERSION = 4;
+// EEPROM layout: 'C' 'B' version, positions[3], config at 8,
+// presets at 64, 56 bytes each: magic, config, tempo in 0.1 BPM (2 bytes, 0 = none)
+const uint8_t  EEPROM_MAGIC0 = 'C', EEPROM_MAGIC1 = 'B', EEPROM_VERSION = 5;
 const uint8_t  EEPROM_POSITIONS = 3;
 const uint8_t  EEPROM_CONFIG = 8;
 const uint8_t  PRESET_COUNT = 4;
-const uint16_t EEPROM_PRESETS = 64, PRESET_STRIDE = 48;
-const uint16_t PRESET_STRIDE_V3 = 40;
+const uint16_t EEPROM_PRESETS = 64, PRESET_STRIDE = 56;
+const uint16_t PRESET_STRIDE_V3 = 40, PRESET_STRIDE_V4 = 48;
 const uint8_t  PRESET_MAGIC = 0x5A;
 
 // ---------------------------------------------------------------- PROTOCOL --
@@ -149,15 +161,15 @@ const uint8_t  PRESET_MAGIC = 0x5A;
 //     11 jack mode            set one jack mode (saved)
 //     12 jack                 identify: only this jack pulses on every beat for 15 s (7F = stop)
 //     13 p0 p1 p2             physical place of each jack (0 top, 1 middle, 2 bottom), saved
-//     14 <config, 41 bytes>   replace the settings (saved)
+//     14 <config, 50 bytes>   replace the settings (saved)
 //     15 bpmHi bpmLo          tempo in 0.1 BPM (14 bits); the pot takes over when moved
 //     16 action               0 start, 1 stop, 2 pause, 3 continue, 4 back to the start
-//     17 op slot              preset: op 0 = load, 1 = save current settings, 2 = erase
+//     17 op slot              preset: op 0 = load (with its tempo), 1 = save current settings and tempo, 2 = erase
 //   box -> computer
 //     01 <state>              see sendState()
 //     02 <config> presetMask  current settings, and which preset slots are filled
 // The MIDI clock itself (F8 / FA / FB / FC / F2) is on the same line.
-const uint8_t FW_VERSION_MAJOR = 2, FW_VERSION_MINOR = 3;
+const uint8_t FW_VERSION_MAJOR = 2, FW_VERSION_MINOR = 4;
 const uint8_t SYSEX_ID = 0x7D, SYSEX_C = 'C', SYSEX_B = 'B';
 const uint8_t CMD_STATE = 0x01, CMD_CONFIG = 0x02,
               CMD_HELLO = 0x10, CMD_SET_MODE = 0x11, CMD_IDENTIFY = 0x12, CMD_SET_POSITIONS = 0x13,
@@ -191,6 +203,7 @@ volatile int8_t   identifyJack = -1;
 Counters          song;                      // advances while playing
 Counters          freeRun;                   // always advances (menu preview, identify)
 volatile uint32_t songTick = 0;              // position while playing / paused, in ticks
+uint32_t          freeTick = 0;              // always counting (previews)
 int8_t            heldNote[EUCLID_COUNT] = {-1, -1, -1};
 bool              jackGate[JACK_COUNT] = {true, true, true};   // this pulse passed its probability
 bool              euclidPlay[EUCLID_COUNT];                    // this step is a hit that passed its probability
@@ -225,7 +238,7 @@ uint32_t lastReportAt = 0;
 uint16_t lastReportedPot = 0;
 uint32_t identifyUntil = 0;
 uint8_t  jackPosition[JACK_COUNT] = {0, 1, 2};
-uint8_t  rxBuffer[48];
+uint8_t  rxBuffer[64];
 uint8_t  rxLength = 0;
 bool     rxInSysex = false;
 
@@ -275,30 +288,43 @@ static uint16_t rnd() {
 }
 static bool chance(uint8_t percent) { return percent >= 100 || rnd() % 100 < percent; }
 
-// True on the tick where a new pulse of this mode begins (probability is rolled there).
-static bool pulseStart(uint8_t mode, const Counters &c) {
-  uint16_t period = MODE_PERIOD[mode];
-  if (period) return c.cycle % period == 0;
-  if (mode == MODE_BAR) return c.bar == 0;
-  if (mode >= MODE_EUCLID_A) return c.sub[mode - MODE_EUCLID_A] == 0;
-  return false;   // reset and run are never random
-}
+// Where a jack is in its current pulse, for its mode, offset, division and gate length.
+struct Phase {
+  bool start;   // a new pulse begins on this tick (probability is rolled here)
+  bool level;   // output level
+};
 
-// Level of an output for a mode at a position. preview: menu / identify display.
-static bool modeLevel(uint8_t mode, const Counters &c, bool preview) {
-  uint16_t period = MODE_PERIOD[mode];
-  if (period) return c.cycle % period < period / 2;
-  switch (mode) {
-    case MODE_BAR:   return c.bar < barTicks() / 2;
-    case MODE_RUN:   return true;
-    case MODE_RESET: return preview && c.bar < 2;   // the real pulse comes from startTransport()
-    default: {
-      uint8_t g = mode - MODE_EUCLID_A;
-      const Euclid &e = cfg.euclid[g];
-      bool hit = preview ? euclidHit(e, c.step[g]) : euclidPlay[g];
-      return hit && c.sub[g] < EUCLID_DIV_TICKS[e.division] / 2;
-    }
+static Phase jackPhase(uint8_t j, const Counters &c, uint32_t pos, bool preview) {
+  uint8_t mode = cfg.jackMode[j];
+  uint16_t off = (uint16_t)cfg.jackOffset[j] * 24;
+  uint16_t period = MODE_PERIOD[mode], phase, length;
+  Phase r = {false, false};
+  bool hit = true;
+  if (period) {                                     // plain clocks
+    length = period;
+    phase = (c.cycle + CYCLE_TICKS - off) % CYCLE_TICKS % period;
+  } else if (mode == MODE_BAR) {
+    length = barTicks();
+    phase = (c.bar + length - off % length) % length;
+  } else if (mode == MODE_DIVISION) {
+    length = (uint16_t)cfg.jackDivision[j] * 24;
+    phase = (pos + length - off % length) % length;
+  } else if (mode == MODE_RUN) {
+    r.level = true;
+    return r;
+  } else if (mode == MODE_RESET) {
+    r.level = preview && c.bar < 2;                 // the real pulse comes from startTransport()
+    return r;
+  } else {                                          // Euclidean: the rotation is its offset
+    uint8_t g = mode - MODE_EUCLID_A;
+    const Euclid &e = cfg.euclid[g];
+    length = EUCLID_DIV_TICKS[e.division];
+    phase = c.sub[g];
+    hit = preview ? euclidHit(e, c.step[g]) : euclidPlay[g];
   }
+  r.start = phase == 0;
+  r.level = hit && (cfg.jackTrigger[j] ? phase == 0 : phase < length / 2);
+  return r;
 }
 
 // ==================================================================== MIDI ==
@@ -368,15 +394,16 @@ void onClockTick(uint32_t tick) {
     for (uint8_t j = 0; j < JACK_COUNT; j++) digitalWrite(JACK_PINS[j], (int8_t)j == identifyJack && level);
     digitalWrite(LED_PIN, level);
   } else if (menuActive) {
-    bool level = menuPage < JACK_COUNT && modeLevel(cfg.jackMode[menuPage], freeRun, true);
+    bool level = menuPage < JACK_COUNT && jackPhase(menuPage, freeRun, freeTick, true).level;
     for (uint8_t j = 0; j < JACK_COUNT; j++) digitalWrite(JACK_PINS[j], j == menuPage && level);
     if (menuLedPreview) digitalWrite(LED_PIN, level);
   } else {
     for (uint8_t j = 0; j < JACK_COUNT; j++) {
       uint8_t m = cfg.jackMode[j];
-      if (playing && pulseStart(m, song)) jackGate[j] = chance(cfg.jackProb[j]);
+      Phase ph = jackPhase(j, song, songTick, false);
+      if (playing && ph.start) jackGate[j] = chance(cfg.jackProb[j]);
       bool gated = m == MODE_RESET || m == MODE_RUN || jackGate[j];   // reset and run are never random
-      digitalWrite(JACK_PINS[j], playing && gated && modeLevel(m, song, false));
+      digitalWrite(JACK_PINS[j], playing && gated && ph.level);
     }
     bool led;
     if (playing) led = song.bar < 24 || song.bar % BEAT_TICKS[cfg.timeSig] < 6;
@@ -386,6 +413,7 @@ void onClockTick(uint32_t tick) {
   }
 
   advance(freeRun);
+  freeTick++;
   if (playing) { advance(song); songTick++; }
 }
 
@@ -420,6 +448,10 @@ static bool validConfig(const Config &c) {
   }
   for (uint8_t j = 0; j < JACK_COUNT; j++) if (c.jackProb[j] > 100) return false;
   for (uint8_t g = 0; g < EUCLID_COUNT; g++) if (c.euclidProb[g] > 100) return false;
+  for (uint8_t j = 0; j < JACK_COUNT; j++) {
+    if (c.jackTrigger[j] > 1 || c.jackOffset[j] > MAX_OFFSET ||
+        c.jackDivision[j] < 1 || c.jackDivision[j] > MAX_DIVISION) return false;
+  }
   return true;
 }
 
@@ -461,48 +493,57 @@ static bool loadPreset(uint8_t slot) {
   if (slot >= PRESET_COUNT || EEPROM.read(a) != PRESET_MAGIC || !readConfig(a + 1, tmp)) return false;
   applyConfig(tmp);
   saveConfig();
+  uint16_t b10 = EEPROM.read(a + 1 + CONFIG_SIZE) | ((uint16_t)EEPROM.read(a + 2 + CONFIG_SIZE) << 8);
+  if (b10 >= BPM10_MIN && b10 <= BPM10_MAX) {
+    applyTempo(b10 / 10.0);
+    tempoArmed = false;   // the pot takes over once moved
+    potRef = potValue;
+  }
   return true;
+}
+
+static void writePreset(uint8_t slot, const Config &c, uint16_t b10) {
+  uint16_t a = EEPROM_PRESETS + slot * PRESET_STRIDE;
+  EEPROM.update(a, PRESET_MAGIC);
+  const uint8_t *p = (const uint8_t *)&c;
+  for (uint8_t i = 0; i < CONFIG_SIZE; i++) EEPROM.update(a + 1 + i, p[i]);
+  EEPROM.update(a + 1 + CONFIG_SIZE, b10 & 0xFF);
+  EEPROM.update(a + 2 + CONFIG_SIZE, b10 >> 8);
 }
 
 static void savePreset(uint8_t slot) {
   if (slot >= PRESET_COUNT) return;
-  uint16_t a = EEPROM_PRESETS + slot * PRESET_STRIDE;
-  EEPROM.update(a, PRESET_MAGIC);
-  const uint8_t *p = (const uint8_t *)&cfg;
-  for (uint8_t i = 0; i < CONFIG_SIZE; i++) EEPROM.update(a + 1 + i, p[i]);
+  writePreset(slot, cfg, (uint16_t)(bpm * 10 + 0.5));
   markConfigDirty();
 }
 
-// Settings saved by firmware 2.2 (EEPROM version 3): same fields minus the
-// probabilities, presets 40 bytes apart. Convert them in place.
-static bool fromV3(const uint8_t *bytes, Config &out) {
+// Settings saved by older 2.x firmware: the same fields minus the newer ones
+// (which take their default values), presets packed closer. Convert in place.
+static bool fromOld(const uint8_t *bytes, uint8_t size, Config &out) {
   out = DEFAULT_CONFIG;
-  memcpy(&out, bytes, CONFIG_SIZE_V3);
-  for (uint8_t j = 0; j < JACK_COUNT; j++) out.jackProb[j] = 100;
-  for (uint8_t g = 0; g < EUCLID_COUNT; g++) out.euclidProb[g] = 100;
+  memcpy(&out, bytes, size);
   return validConfig(out);
 }
 
-static void migrateFromV3() {
-  uint8_t old[PRESET_COUNT][1 + CONFIG_SIZE_V3];   // read everything first: the areas overlap
+static void migrate(uint8_t size, uint8_t stride) {
+  uint8_t old[PRESET_COUNT][1 + CONFIG_SIZE_V4];   // read everything first: the areas overlap
   for (uint8_t s = 0; s < PRESET_COUNT; s++)
-    for (uint8_t i = 0; i < 1 + CONFIG_SIZE_V3; i++) old[s][i] = EEPROM.read(EEPROM_PRESETS + s * PRESET_STRIDE_V3 + i);
-  uint8_t cur[CONFIG_SIZE_V3];
-  for (uint8_t i = 0; i < CONFIG_SIZE_V3; i++) cur[i] = EEPROM.read(EEPROM_CONFIG + i);
-  if (!fromV3(cur, cfg)) cfg = DEFAULT_CONFIG;
-  Config keep = cfg;
+    for (uint8_t i = 0; i < 1 + size; i++) old[s][i] = EEPROM.read(EEPROM_PRESETS + s * stride + i);
+  uint8_t cur[CONFIG_SIZE_V4];
+  for (uint8_t i = 0; i < size; i++) cur[i] = EEPROM.read(EEPROM_CONFIG + i);
+  if (!fromOld(cur, size, cfg)) cfg = DEFAULT_CONFIG;
   for (uint8_t s = 0; s < PRESET_COUNT; s++) {
     Config tmp;
-    if (old[s][0] == PRESET_MAGIC && fromV3(old[s] + 1, tmp)) { cfg = tmp; savePreset(s); }
+    if (old[s][0] == PRESET_MAGIC && fromOld(old[s] + 1, size, tmp)) writePreset(s, tmp, 0);
     else EEPROM.update(EEPROM_PRESETS + s * PRESET_STRIDE, 0);
   }
-  cfg = keep;
   saveConfig();   // writes the new version number
 }
 
 static void loadSettings() {
   bool magic = EEPROM.read(0) == EEPROM_MAGIC0 && EEPROM.read(1) == EEPROM_MAGIC1;
-  if (magic && EEPROM.read(2) == 3) migrateFromV3();
+  if (magic && EEPROM.read(2) == 3) migrate(CONFIG_SIZE_V3, PRESET_STRIDE_V3);
+  if (magic && EEPROM.read(2) == 4) migrate(CONFIG_SIZE_V4, PRESET_STRIDE_V4);
   bool valid = magic && EEPROM.read(2) == EEPROM_VERSION;
   if (!valid || !readConfig(EEPROM_CONFIG, cfg)) cfg = DEFAULT_CONFIG;
 
