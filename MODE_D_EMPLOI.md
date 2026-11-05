@@ -35,9 +35,11 @@ Chaque jack a son propre **mode**, que tu choisis dans le menu. Les 8 modes poss
 | 7 | **Reset** | 1 seule impulsion courte, au moment du Start | L'entrée « reset » d'un séquenceur, pour qu'il reparte du pas 1 en même temps que tes machines MIDI |
 | 8 | **Run** | Tension haute tant que ça tourne, 0 V à l'arrêt | L'entrée « run » ou « start/stop » de certains séquenceurs |
 
-**Réglage d'origine :** jack 1 = 1/16, jack 2 = 1/8, jack 3 = Reset.
+**Où sont les jacks :** **jack 1 = celui du haut**, **jack 2 = celui du milieu**, **jack 3 = celui du bas** (à côté du bouton rouge).
 
-> **Quel jack est le 1, le 2, le 3 ?** On ne le sait pas encore : ça dépend de comment ton ami a câblé la boîte. Pour le trouver, entre dans le menu (voir plus bas). Dans le menu, **seul le jack en cours de réglage envoie un signal**. Branche un câble sur chaque prise vers ton modulaire, et regarde laquelle réagit pendant que tu règles le jack 1, puis le 2, puis le 3. Note-le sur la boîte une fois pour toutes.
+**Réglage d'origine :** haut = 1/16 (le tempo pour le séquenceur), milieu = Reset, bas = 1/8.
+
+> Si ta boîte est câblée autrement, l'écran sur le Mac (section 5) sait le découvrir : le bouton « Identifier » fait battre un seul jack, et tu indiques sa place (haut, milieu, bas). La boîte s'en souvient.
 
 ---
 
@@ -46,6 +48,8 @@ Chaque jack a son propre **mode**, que tu choisis dans le menu. Les 8 modes poss
 Le menu sert **uniquement** à choisir le mode de chaque jack. Il ne change ni le tempo ni le MIDI.
 
 ### Entrer dans le menu
+> Le plus simple pour régler les jacks, c'est l'écran sur le Mac (section 5) : on clique sur le mode voulu. Le menu de la boîte sert quand tu n'as pas d'ordinateur sous la main.
+
 1. La boîte doit être **à l'arrêt** (LED éteinte). Si elle tourne, appuie une fois pour l'arrêter.
 2. **Appuie sur le bouton et garde-le enfoncé** environ 1,5 seconde.
 3. La LED se met à clignoter : tu es dans le menu. **Tu peux lâcher le bouton.**
@@ -56,9 +60,9 @@ Le menu sert **uniquement** à choisir le mode de chaque jack. Il ne change ni l
 La LED fait toujours la même chose en deux temps :
 
 1. **D'abord quelques éclairs rapides : c'est le numéro du jack** que tu règles.
-   - 1 éclair = jack 1
-   - 2 éclairs = jack 2
-   - 3 éclairs = jack 3
+   - 1 éclair = jack 1, celui du haut
+   - 2 éclairs = jack 2, celui du milieu
+   - 3 éclairs = jack 3, celui du bas
 2. **Ensuite, elle clignote exactement comme le jack**, c'est-à-dire au rythme du mode choisi. Tu vois donc le mode sans rien brancher :
 
 | Mode | Ce que fait la LED |
@@ -109,7 +113,37 @@ Le rythme dépend du tempo que tu avais réglé avant d'entrer dans le menu. Par
 
 ---
 
-## 5. Si ça ne marche pas comme prévu
+## 5. L'écran sur le Mac
+
+La boîte n'a pas d'écran, mais le Mac peut en faire un : une page qui affiche tout ce qui se passe dans la boîte, en direct, et qui permet de régler les jacks à la souris.
+
+### L'ouvrir
+1. Branche la boîte au Mac avec son câble USB.
+2. Ouvre le fichier **`screen/clockbox-screen.html`** dans **Google Chrome** (ou Microsoft Edge). Safari et Firefox ne savent pas parler au port USB.
+3. Clique **« Connecter la boîte »**. Dans la liste qui s'ouvre, choisis **« FT232R USB UART »**, puis **« Connexion »**.
+4. La boîte **redémarre une seconde** (elle repasse à l'arrêt) : c'est normal, la puce USB fait ça à chaque connexion. Connecte-toi donc **avant** de jouer, pas en plein morceau.
+5. L'écran s'allume et la pastille en haut passe à « Connecté ».
+
+### Ce qu'on y voit
+- **Une boîte dessinée** comme la vraie, avec un écran ajouté. Le potard tourne quand tu tournes le vrai, le bouton s'enfonce quand tu appuies, la LED clignote comme la vraie, et chaque jack s'allume quand il envoie une impulsion, avec son mode écrit dessous.
+- **L'écran de la boîte dessinée** montre :
+  - le **tempo** en BPM, en marche ou à l'arrêt, le temps en cours (4 points) et le numéro de mesure ;
+  - quand tu **tiens le bouton**, une barre qui se remplit jusqu'à l'ouverture du menu, au bout d'1,5 s ;
+  - dans le **menu**, le jack réglé, les 8 modes avec celui choisi en surbrillance, et un cadre pointillé sur la zone où pointe le potard tant qu'il n'a pas « repris la main » ;
+  - « **bouge-moi** » sous le potard quand il attend que tu le bouges un peu.
+- **À droite (ou en dessous sur un petit écran)** : la liste des 3 jacks, l'état détaillé et un journal de ce qui s'est passé.
+
+### Régler les jacks à la souris
+- Pour chaque jack, **clique sur le mode voulu** (24 ppqn, 1/16, 1/8…). Il est envoyé à la boîte et **enregistré tout de suite**, sans passer par le menu.
+- **« Identifier »** (seulement à l'arrêt) : ce jack, et lui seul, bat à chaque temps pendant 15 s, et la LED de la boîte aussi. Branche ton câble sur un module et regarde lequel réagit. Un appui sur le bouton de la boîte, ou « Arrêter », coupe l'identification.
+- **« Place »** : si un jack n'est pas là où l'écran le dit, choisis sa vraie place (haut, milieu, bas). La boîte s'en souvient.
+
+### Se déconnecter
+Clique « Déconnecter », ou ferme la page. La boîte continue de tourner normalement. **Sans la page, elle n'envoie rien de plus que d'habitude sur ses prises MIDI.**
+
+> **Mode démo** : le bouton « Mode démo » fait tourner une boîte imaginaire, pour découvrir l'écran sans rien brancher. Clique le bouton rouge dessiné pour start/stop.
+
+## 6. Si ça ne marche pas comme prévu
 
 | Problème | Explication |
 |---|---|
@@ -118,10 +152,12 @@ Le rythme dépend du tempo que tu avais réglé avant d'entrer dans le menu. Par
 | Après le menu, le potard ne change pas le tempo | Même chose : bouge-le un peu, et il reprend la main |
 | Mon séquenceur démarre au pas 2 au lieu du pas 1 | Certains séquenceurs gèrent mal un reset suivi d'une impulsion d'horloge. Essaie le mode **Run** à la place du Reset |
 | Je ne sais plus ce que j'ai réglé | Entre dans le menu : la LED montre le mode de chaque jack |
+| « Connecter la boîte » ne montre pas « FT232R » | Vérifie le câble USB. Ferme tout autre programme qui utiliserait la boîte (IDE Arduino, autre onglet de l'écran) |
+| L'écran affiche « Connecté (horloge seule) » | La boîte a un ancien firmware : le tempo et le start/stop s'affichent quand même, mais pas le potard, le menu ni les réglages |
 
 ---
 
-## 6. Avant de flasher ta propre boîte
+## 7. Avant de flasher ta propre boîte
 
 Sauvegarde d'abord le programme qui est dedans, pour pouvoir le remettre en cas de souci. Avec l'outil `avrdude` fourni avec l'IDE Arduino, carte Nano branchée :
 

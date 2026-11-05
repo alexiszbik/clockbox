@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clockbox Screen</title>
+<style>
+  :root {
+    --bg: #ece6dc;
+    --surface: #fbf8f3;
+    --text: #22201c;
+    --muted: #6d675e;
+    --line: #d8d0c3;
+    --accent: #c8323c;
+    --accent-soft: #f6dcdc;
+    --ok: #2f7d4f;
+    --warn: #a86a00;
+    --box: #1b1b1b;
+    --box-edge: #0c0c0c;
+    --metal: #c9c9c9;
+    --lcd-bg: #9fb87a;
+    --lcd-ink: #1d2a12;
+    --lcd-dim: #7f9a5c;
+    --led-off: #4a1010;
+    --led-on: #ff3b30;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141414; --surface: #1e1e1e; --text: #ece9e4; --muted: #a29d94;
+      --line: #34322f; --accent: #ff5a5f; --accent-soft: #3a1f21; --ok: #5cc98a; --warn: #e0a33a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141414; --surface: #1e1e1e; --text: #ece9e4; --muted: #a29d94;
+    --line: #34322f; --accent: #ff5a5f; --accent-soft: #3a1f21; --ok: #5cc98a; --warn: #e0a33a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    padding: 16px 24px; border-bottom: 1px solid var(--line); background: var(--surface);
+  }
+  header h1 { font-size: 18px; margin: 0 auto 0 0; letter-spacing: .2px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
+    border-radius: 999px; border: 1px solid var(--line); font-size: 13px; color: var(--muted);
+  }
+  .chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .chip.ok { color: var(--ok); border-color: var(--ok); } .chip.ok::before { background: var(--ok); }
+  .chip.wait { color: var(--warn); border-color: var(--warn); } .chip.wait::before { background: var(--warn); }
+  button, select {
+    font: inherit; color: inherit; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer;
+  }
+  button:hover:not(:disabled), select:hover:not(:disabled) { border-color: var(--muted); }
+  button:disabled, select:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main {
+    display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 28px;
+    max-width: 1180px; margin: 0 auto; padding: 24px;
+  }
+  @media (max-width: 920px) { main { grid-template-columns: 1fr; padding: 16px; } }
+  .notice {
+    grid-column: 1 / -1; padding: 12px 16px; border-radius: 10px;
+    background: var(--accent-soft); border: 1px solid var(--accent); font-size: 14px;
+  }
+  .notice[hidden] { display: none; }
+
+  /* ---------------------------------------------------------- the box -- */
+  .box {
+    position: relative; aspect-ratio: 1.36; width: 100%;
+    background: radial-gradient(120% 90% at 30% 20%, #2a2a2a, var(--box) 60%);
+    border-radius: 18px; border: 3px solid var(--box-edge);
+    box-shadow: 0 18px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+    container-type: inline-size;
+  }
+  .screw { position: absolute; width: 3.2cqw; height: 3.2cqw; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #777, #222); }
+  .screw::after { content: ""; position: absolute; inset: 45% 15%; background: #111; transform: rotate(35deg); }
+  .title {
+    position: absolute; left: 7%; top: 30%; width: 46%;
+    font-family: "Marker Felt", "Chalkboard SE", "Comic Sans MS", cursive;
+    color: #e0484f; font-size: 11.5cqw; line-height: .95; text-align: left;
+    -webkit-text-stroke: .35cqw #f2ecec; paint-order: stroke fill; letter-spacing: .5cqw;
+    pointer-events: none;
+  }
+  .title span { display: block; padding-left: 40%; }
+
+  .lcd {
+    position: absolute; left: 5%; top: 5%; width: 46%; height: 24%;
+    background: var(--lcd-bg); border-radius: 1.2cqw; border: .9cqw solid #2c2c2c;
+    box-shadow: inset 0 0 2.5cqw rgba(0,0,0,.35);
+    color: var(--lcd-ink); padding: 1cqw 1.6cqw;
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 2.2cqw; line-height: 1.25;
+    display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
+  }
+  .lcd .row { display: flex; justify-content: space-between; gap: 1cqw; white-space: nowrap; }
+  .lcd .bpm { font-size: 5.6cqw; font-weight: 700; line-height: 1; letter-spacing: -.2cqw; }
+  .lcd .bpm small { font-size: 2.3cqw; font-weight: 600; letter-spacing: 0; margin-left: .6cqw; }
+  .lcd .dim { color: var(--lcd-dim); }
+  .lcd .beats { display: flex; gap: .9cqw; align-items: center; }
+  .lcd .beat { width: 2cqw; height: 2cqw; border-radius: 50%; border: .3cqw solid var(--lcd-ink); }
+  .lcd .beat.on { background: var(--lcd-ink); }
+  .lcd .modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: .2cqw .6cqw; font-size: 1.95cqw; }
+  .lcd .modes span { padding: 0 .4cqw; border-radius: .4cqw; white-space: nowrap; overflow: hidden; }
+  .lcd .row span { overflow: hidden; text-overflow: ellipsis; }
+  .lcd .modes span.sel { background: var(--lcd-ink); color: var(--lcd-bg); }
+  .lcd .modes span.aim { outline: .3cqw dashed var(--lcd-ink); }
+  .lcd .bar { height: 1cqw; background: var(--lcd-dim); border-radius: .5cqw; overflow: hidden; }
+  .lcd .bar i { display: block; height: 100%; background: var(--lcd-ink); width: 0; }
+  .lcd.off { background: #6e7a5e; color: #4b5640; }
+
+  .led {
+    position: absolute; left: 21%; top: 63%; width: 3.6cqw; height: 3.6cqw; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #7a2a2a, var(--led-off)); border: .4cqw solid #333;
+    transition: background 40ms, box-shadow 40ms;
+  }
+  .led.on { background: radial-gradient(circle at 35% 30%, #ffb0a8, var(--led-on));
+    box-shadow: 0 0 3cqw 1cqw rgba(255,59,48,.55); }
+
+  .pot { position: absolute; left: 11%; top: 74%; width: 15cqw; height: 15cqw; }
+  .pot .skirt { position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from 0deg, #111, #2a2a2a, #111, #2a2a2a, #111); box-shadow: 0 .8cqw 1.5cqw rgba(0,0,0,.6); }
+  .pot .cap { position: absolute; inset: 22%; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #f4f4f4, #a9a9a9 70%); }
+  .pot .knob { position: absolute; inset: 0; transition: transform 60ms linear; }
+  .pot .knob::after { content: ""; position: absolute; left: 48%; top: 4%; width: 4%; height: 20%; background: #fff; border-radius: 1cqw; }
+  .pot .hint { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: .6cqw;
+    font-size: 2.2cqw; color: #f5d36b; white-space: nowrap; }
+
+  .btn {
+    position: absolute; left: 36%; top: 77%; width: 8.5cqw; height: 8.5cqw; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #eee, #8a8a8a); display: grid; place-items: center;
+  }
+  .btn i { width: 60%; height: 60%; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #ff6b6b, #b5121b);
+    box-shadow: 0 .5cqw 0 #6d0b10; transition: transform 50ms, box-shadow 50ms; }
+  .btn.down i { transform: translateY(.45cqw); box-shadow: 0 .05cqw 0 #6d0b10; }
+  .btn svg { position: absolute; inset: -1.6cqw; width: calc(100% + 3.2cqw); height: calc(100% + 3.2cqw); transform: rotate(-90deg); }
+  .btn svg circle { fill: none; stroke: #f5d36b; stroke-width: 3; stroke-linecap: round; }
+
+  .jack { position: absolute; left: 55%; width: 9.5cqw; height: 9.5cqw; border-radius: 50%;
+    background: radial-gradient(circle, #050505 34%, #8e8e8e 36%, #e3e3e3 52%, #9a9a9a 70%, #5a5a5a 72%); }
+  .jack::after { content: ""; position: absolute; inset: 22%; border-radius: 50%; box-shadow: 0 0 0 0 transparent; transition: box-shadow 40ms; }
+  .jack.on::after { box-shadow: 0 0 2.4cqw 1.1cqw rgba(245,211,107,.85); }
+  .jack.ident { outline: .5cqw dashed #f5d36b; outline-offset: 1cqw; }
+  .jack .tag { position: absolute; left: 50%; top: 104%; transform: translateX(-50%);
+    font-size: 2.2cqw; color: #eee; background: rgba(0,0,0,.55); padding: .3cqw 1cqw; border-radius: .8cqw; white-space: nowrap; }
+  .jack[data-slot="0"] { top: 7%; } .jack[data-slot="1"] { top: 38%; } .jack[data-slot="2"] { top: 69%; }
+
+  .din { position: absolute; left: 73%; width: 16cqw; height: 13cqw; }
+  .din .plate { position: absolute; inset: 0; border-radius: 50% / 50%; background: linear-gradient(#ddd, #9b9b9b); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  .din .hole { position: absolute; inset: 17% 22%; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #2c2c2c, #050505); }
+  .din .lbl { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); font-size: 2cqw; color: #bbb; white-space: nowrap; }
+  .din.a { top: 8%; } .din.b { top: 70%; }
+  .din.act .hole { box-shadow: 0 0 1.4cqw .3cqw rgba(120,200,255,.6); }
+
+  /* -------------------------------------------------------- the panel -- */
+  .panel { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card h2 { font-size: 15px; margin: 0 0 4px; }
+  .card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+  .jackrow { border-top: 1px solid var(--line); padding: 14px 0 6px; }
+  .jackrow:first-of-type { border-top: 0; padding-top: 4px; }
+  .jackrow .head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .jackrow .name { font-weight: 650; margin-right: auto; }
+  .jackrow .name small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .seg button { padding: 7px 4px; font-size: 13px; text-align: center; }
+  .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .seg button .d { display: block; font-size: 11px; opacity: .75; font-weight: 400; }
+  .ident-on { border-color: var(--warn) !important; color: var(--warn) !important; }
+  .help { font-size: 13.5px; color: var(--muted); }
+  .help li { margin: 4px 0; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 14px; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .log { font: 12px/1.4 "SF Mono", Menlo, monospace; color: var(--muted); max-height: 110px; overflow: auto; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1 data-t="title">Clockbox — écran</h1>
+  <span id="status" class="chip">—</span>
+  <button id="connect" class="primary" data-t="connect">Connecter la boîte</button>
+  <button id="demo" data-t="demo">Mode démo</button>
+  <select id="lang" aria-label="Langue / language">
+    <option value="fr">Français</option><option value="en">English</option>
+  </select>
+</header>
+
+<main>
+  <div id="noSerial" class="notice" hidden data-t="noSerial"></div>
+  <div id="resetNote" class="notice" hidden data-t="resetNote"></div>
+
+  <section aria-label="clockbox">
+    <div class="box" id="box">
+      <div class="screw" style="left:28%;top:2.5%"></div>
+      <div class="screw" style="left:8%;top:58%"></div>
+      <div class="lcd off" id="lcd" aria-live="polite"></div>
+      <div class="title">clock<span>box</span></div>
+      <div class="led" id="led" title="LED"></div>
+      <div class="pot" id="pot"><div class="skirt"></div><div class="knob" id="knob"><div class="cap"></div></div><div class="hint" id="potHint"></div></div>
+      <div class="btn" id="btn"><svg viewBox="0 0 40 40"><circle id="ring" cx="20" cy="20" r="18" stroke-dasharray="0 200"/></svg><i></i></div>
+      <div class="jack" data-slot="0"><span class="tag"></span></div>
+      <div class="jack" data-slot="1"><span class="tag"></span></div>
+      <div class="jack" data-slot="2"><span class="tag"></span></div>
+      <div class="din a"><div class="plate"></div><div class="hole"></div><span class="lbl">MIDI</span></div>
+      <div class="din b"><div class="plate"></div><div class="hole"></div><span class="lbl">MIDI</span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="card">
+      <h2 data-t="jacksTitle">Les 3 jacks</h2>
+      <p data-t="jacksHelp">Clique un mode pour l'envoyer à la boîte (enregistré tout de suite). « Identifier » fait battre ce jack seul pendant 15 s : regarde lequel réagit sur ton module, puis choisis sa place.</p>
+      <div id="jackRows"></div>
+    </div>
+    <div class="card">
+      <h2 data-t="infoTitle">État</h2>
+      <dl class="kv" id="info"></dl>
+    </div>
+    <div class="card">
+      <h2 data-t="howTitle">Rappel des commandes</h2>
+      <ul class="help" data-t="howList"></ul>
+    </div>
+    <div class="card">
+      <h2 data-t="logTitle">Journal</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+// ------------------------------------------------------------------- text --
+const T = {
+  fr: {
+    title: "Clockbox — écran", connect: "Connecter la boîte", disconnect: "Déconnecter",
+    demo: "Mode démo", demoStop: "Quitter la démo",
+    noSerial: "Ce navigateur ne sait pas parler au port USB. Ouvre cette page dans <b>Google Chrome</b> ou <b>Microsoft Edge</b> (Safari et Firefox ne le permettent pas). Le mode démo marche partout.",
+    resetNote: "La boîte redémarre une seconde au moment de la connexion (elle repasse à l'arrêt) : c'est normal, c'est la puce USB. Connecte-toi avant de jouer, pas en plein morceau.",
+    jacksTitle: "Les 3 jacks",
+    jacksHelp: "Clique un mode pour l'envoyer à la boîte (enregistré tout de suite). « Identifier » fait battre ce jack seul pendant 15 s : regarde lequel réagit sur ton module, puis choisis sa place.",
+    infoTitle: "État", howTitle: "Rappel des commandes", logTitle: "Journal",
+    howList: [
+      "<b>Potard</b> : tempo, 30 à 240 BPM.",
+      "<b>Bouton en marche</b> : stop immédiat.",
+      "<b>Bouton à l'arrêt</b> : appui court = start (au relâchement), tenir 1,5 s = menu.",
+      "<b>Dans le menu</b> : bouger un peu le potard puis choisir le mode ; appui court = jack suivant ; tenir 1,5 s = enregistrer et quitter.",
+      "Tout se règle aussi ici, à la souris."
+    ],
+    st_off: "Déconnecté", st_wait: "Connexion…", st_ok: "Connecté", st_old: "Connecté (horloge seule)", st_demo: "Démo",
+    playing: "EN MARCHE", stopped: "À L'ARRÊT", bar: "mesure", beat: "temps",
+    menu: "MENU", jack: "JACK", identify: "IDENTIFIER", identHelp: "seul ce jack bat à chaque temps",
+    holdStart: "tenir = menu…", holdMenu: "tenir = enregistrer…", menuHelp: "court: jack suivant · long: enregistrer",
+    turnPot: "bouge le potard pour agir", turnPotShort: "bouge-moi",
+    places: ["Haut", "Milieu", "Bas"], place: "Place",
+    identBtn: "Identifier", identStop: "Arrêter",
+    identDisabled: "Disponible à l'arrêt et hors menu",
+    k_fw: "Firmware", k_bpm: "Tempo", k_meas: "Tempo mesuré (horloge MIDI)", k_state: "Transport", k_pot: "Potard", k_btn: "Bouton",
+    down: "enfoncé", up: "relâché", noState: "Pas de réponse d'état : la boîte a sans doute l'ancien firmware. Le tempo et le start/stop restent affichés depuis l'horloge MIDI.",
+    modes: ["24 ppqn", "1/16", "1/8", "1/4", "1/2", "Mesure", "Reset", "Run"],
+    modeDesc: ["DIN sync", "doubles cr.", "croches", "noires", "blanches", "1 / mesure", "au start", "gate"],
+  },
+  en: {
+    title: "Clockbox — screen", connect: "Connect the box", disconnect: "Disconnect",
+    demo: "Demo mode", demoStop: "Leave demo",
+    noSerial: "This browser cannot talk to the USB port. Open this page in <b>Google Chrome</b> or <b>Microsoft Edge</b> (Safari and Firefox cannot). Demo mode works everywhere.",
+    resetNote: "The box restarts for a second when the page connects (it goes back to stop): that is the USB chip, it is normal. Connect before playing, not in the middle of a song.",
+    jacksTitle: "The 3 jacks",
+    jacksHelp: "Click a mode to send it to the box (saved right away). “Identify” makes only this jack pulse for 15 s: see which one your module reacts to, then pick its place.",
+    infoTitle: "Status", howTitle: "Controls", logTitle: "Log",
+    howList: [
+      "<b>Pot</b>: tempo, 30 to 240 BPM.",
+      "<b>Button while running</b>: stop, immediately.",
+      "<b>Button while stopped</b>: short press = start (on release), hold 1.5 s = menu.",
+      "<b>In the menu</b>: move the pot a little, then pick the mode; short press = next jack; hold 1.5 s = save and quit.",
+      "Everything can be set here with the mouse too."
+    ],
+    st_off: "Disconnected", st_wait: "Connecting…", st_ok: "Connected", st_old: "Connected (clock only)", st_demo: "Demo",
+    playing: "RUNNING", stopped: "STOPPED", bar: "bar", beat: "beat",
+    menu: "MENU", jack: "JACK", identify: "IDENTIFY", identHelp: "only this jack pulses on each beat",
+    holdStart: "hold = menu…", holdMenu: "hold = save…", menuHelp: "short: next jack · long: save",
+    turnPot: "move the pot to act", turnPotShort: "move me",
+    places: ["Top", "Middle", "Bottom"], place: "Place",
+    identBtn: "Identify", identStop: "Stop",
+    identDisabled: "Available when stopped, outside the menu",
+    k_fw: "Firmware", k_bpm: "Tempo", k_meas: "Measured tempo (MIDI clock)", k_state: "Transport", k_pot: "Pot", k_btn: "Button",
+    down: "pressed", up: "released", noState: "No status reply: the box probably runs an older firmware. Tempo and start/stop are still shown from the MIDI clock.",
+    modes: ["24 ppqn", "1/16", "1/8", "1/4", "1/2", "Bar", "Reset", "Run"],
+    modeDesc: ["DIN sync", "16th notes", "8th notes", "quarters", "halves", "1 per bar", "on start", "gate"],
+  }
+};
+let lang = "fr";
+try { lang = localStorage.getItem("clockbox.lang") || (navigator.language.startsWith("fr") ? "fr" : "en"); } catch (e) {}
+const t = k => T[lang][k];
+
+// ------------------------------------------------------------------ model --
+const LONG_PRESS_MS = 1500, IDENTIFY_MS = 15000;
+const PERIOD24 = [1, 6, 12, 24, 48, 96];        // clock modes, in 24 ppqn ticks
+const PRESS_STOPPED = 1, PRESS_MENU = 2;
+let S = null;                // last state from the box (or demo)
+let link = null;             // { port, reader, writer }
+let demo = null;             // demo timers
+let conn = "off";            // off | wait | ok | old | demo
+const clock = { running: false, songTick: 0, freeTick: 0, f8: [], lastStartAt: 0, startFlash: 0 };
+let pressSince = 0, identSince = 0;
+
+function log(msg) {
+  const el = document.getElementById("log");
+  const line = new Date().toLocaleTimeString() + "  " + msg + "\n";
+  el.textContent = (line + el.textContent).slice(0, 4000);
+}
+
+function onState(d) {
+  const prev = S;
+  S = {
+    fw: d[0] + "." + d[1], bpm: (d[2] << 7) | d[3], playing: !!d[4], menu: !!d[5], menuJack: d[6],
+    modes: [d[7], d[8], d[9]], pot: (d[10] << 7) | d[11], button: !!d[12], press: d[13],
+    tempoArmed: !!d[14], menuArmed: !!d[15], ident: d[16] === 0x7F ? -1 : d[16],
+    pos: [d[17], d[18], d[19]],
+  };
+  if (S.button && !(prev && prev.button)) pressSince = performance.now();
+  if (S.ident >= 0 && !(prev && prev.ident === S.ident)) identSince = performance.now();
+  if (conn !== "ok" && conn !== "demo") { setConn("ok"); log("état reçu, firmware " + S.fw); }
+  if (prev) {
+    if (prev.playing !== S.playing) log(S.playing ? "start" : "stop");
+    if (prev.menu !== S.menu) log(S.menu ? "menu ouvert" : "menu fermé, réglages enregistrés");
+    if (prev.bpm !== S.bpm) log("tempo " + S.bpm + " BPM");
+    for (let j = 0; j < 3; j++) if (prev.modes[j] !== S.modes[j]) log("jack " + (j + 1) + " → " + T[lang].modes[S.modes[j]]);
+  }
+  renderPanel();
+}
+
+function onRealtime(b, now) {
+  if (b === 0xF8) {
+    clock.freeTick++;
+    if (clock.running) clock.songTick++;
+    clock.f8.push(now); if (clock.f8.length > 49) clock.f8.shift();
+  } else if (b === 0xFA) {
+    clock.running = true; clock.songTick = -1; clock.startFlash = now; // first F8 follows → tick 0
+  } else if (b === 0xFC) {
+    clock.running = false;
+  }
+}
+
+function measuredBpm() {
+  const f = clock.f8;
+  if (f.length < 25 || performance.now() - f[f.length - 1] > 1500) return null;
+  return (f.length - 1) / ((f[f.length - 1] - f[0]) / 1000) * 60 / 24;
+}
+
+// -------------------------------------------------------------- serial IO --
+const enc = (...d) => new Uint8Array([0xF0, 0x7D, 0x43, 0x42, ...d, 0xF7]);
+async function send(bytes) {
+  if (demo) return demoCommand(bytes);
+  if (!link || !link.writer) return;
+  try { await link.writer.write(bytes); } catch (e) { log("écriture impossible : " + e.message); }
+}
+
+async function connect() {
+  if (link) return disconnect();
+  if (demo) stopDemo();
+  let port;
+  try { port = await navigator.serial.requestPort(); } catch (e) { return; }
+  try {
+    await port.open({ baudRate: 31250, bufferSize: 4096 });
+  } catch (e) {
+    log("ouverture impossible : " + e.message + " (le port est peut-être utilisé par un autre programme)");
+    return;
+  }
+  link = { port, writer: port.writable.getWriter(), reader: null };
+  S = null; setConn("wait"); log("port ouvert, la boîte redémarre…");
+  document.getElementById("resetNote").hidden = false;
+  readLoop();
+  // the box restarts when the port opens; say hello until it answers
+  for (let i = 0; i < 6 && link && !S; i++) {
+    await sleep(i === 0 ? 2200 : 1000);
+    if (link && !S) await send(enc(0x10));
+  }
+  if (link && !S) { setConn("old"); log(t("noState")); }
+}
+
+async function disconnect() {
+  const l = link; link = null;
+  try { l.reader && await l.reader.cancel(); } catch (e) {}
+  try { l.writer && l.writer.releaseLock(); } catch (e) {}
+  try { await l.port.close(); } catch (e) {}
+  S = null; clock.running = false; setConn("off"); log("déconnecté"); renderPanel();
+}
+
+async function readLoop() {
+  let inSx = false, buf = [];
+  while (link && link.port.readable) {
+    const reader = link.port.readable.getReader(); link.reader = reader;
+    try {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const now = performance.now();
+        for (const b of value) {
+          if (b >= 0xF8) { onRealtime(b, now); continue; }
+          if (b === 0xF0) { inSx = true; buf = []; continue; }
+          if (!inSx) continue;
+          if (b === 0xF7) {
+            inSx = false;
+            if (buf[0] === 0x7D && buf[1] === 0x43 && buf[2] === 0x42 && buf[3] === 0x01 && buf.length >= 24) onState(buf.slice(4));
+            continue;
+          }
+          if (b & 0x80 || buf.length > 64) { inSx = false; continue; }
+          buf.push(b);
+        }
+      }
+    } catch (e) { log("lecture interrompue : " + e.message); }
+    finally { try { reader.releaseLock(); } catch (e) {} }
+    if (!link) break;
+    await sleep(200);
+  }
+}
+
+if ("serial" in navigator) {
+  navigator.serial.addEventListener("disconnect", e => { if (link && e.target === link.port) { log("câble débranché"); disconnect(); } });
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// -------------------------------------------------------------------- demo --
+function startDemo() {
+  if (link) disconnect();
+  // a simulated box, with its own state (the page only sees what it "sends")
+  demo = {
+    timer: null, playTimer: null, identTimer: null,
+    D: { bpm: 120, playing: false, menu: false, menuJack: 0, modes: [1, 2, 6], pot: 384,
+         button: false, press: 0, tempoArmed: true, menuArmed: false, ident: -1, pos: [0, 1, 2] },
+  };
+  setConn("demo"); log("démo : la boîte est simulée — clique le bouton rouge pour start/stop");
+  onState(demoState());
+  const tick = () => {
+    if (!demo) return;
+    onRealtime(0xF8, performance.now());
+    demo.timer = setTimeout(tick, 60000 / (demo.D.bpm * 24));
+  };
+  tick();
+  demo.playTimer = setTimeout(() => { if (demo) demoCommand(null, "toggle"); }, 1200);
+}
+function stopDemo() {
+  if (!demo) return;
+  clearTimeout(demo.timer); clearTimeout(demo.playTimer); clearTimeout(demo.identTimer); demo = null;
+  S = null; clock.running = false; setConn("off"); renderPanel();
+}
+function demoState() {
+  const D = demo.D;
+  return [2, 1, D.bpm >> 7, D.bpm & 0x7F, +D.playing, +D.menu, D.menuJack, ...D.modes,
+    D.pot >> 7, D.pot & 0x7F, +D.button, D.press, +D.tempoArmed, +D.menuArmed,
+    D.ident < 0 ? 0x7F : D.ident, ...D.pos];
+}
+function demoCommand(bytes, action) {
+  const D = demo.D;
+  if (action === "toggle") {
+    D.playing = !D.playing; D.ident = -1;
+    onRealtime(D.playing ? 0xFA : 0xFC, performance.now());
+  } else if (bytes) {
+    const c = bytes[4];
+    if (c === 0x11) D.modes[bytes[5]] = bytes[6];
+    if (c === 0x12) {
+      D.ident = (bytes[5] < 3 && !D.playing && !D.menu) ? bytes[5] : -1;
+      clearTimeout(demo.identTimer);
+      if (D.ident >= 0) demo.identTimer = setTimeout(() => { if (demo) { D.ident = -1; onState(demoState()); } }, IDENTIFY_MS);
+    }
+    if (c === 0x13) D.pos = [bytes[5], bytes[6], bytes[7]];
+  }
+  onState(demoState());
+}
+document.getElementById("btn").addEventListener("click", () => { if (demo) demoCommand(null, "toggle"); });
+
+// -------------------------------------------------------------- rendering --
+function setConn(c) {
+  conn = c;
+  const el = document.getElementById("status");
+  el.className = "chip " + ({ ok: "ok", old: "ok", wait: "wait", demo: "wait" }[c] || "");
+  el.textContent = t("st_" + c);
+  document.getElementById("connect").textContent = link ? t("disconnect") : t("connect");
+  document.getElementById("demo").textContent = demo ? t("demoStop") : t("demo");
+}
+
+function jackLevel(mode, tick, running, now) {
+  if (mode < 6) { const p = PERIOD24[mode]; return p === 1 ? (tick & 1) === 0 : (tick % p) < p / 2; }
+  if (mode === 7) return running;
+  return now - clock.startFlash < 120;       // reset: a short flash on start
+}
+
+const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function renderLcd(now) {
+  const lcd = document.getElementById("lcd");
+  if (conn === "off" || conn === "wait") {
+    lcd.className = "lcd off";
+    lcd.innerHTML = `<div class="row"><span>clockbox</span><span>${conn === "wait" ? "…" : ""}</span></div><div class="bpm">--- <small>BPM</small></div><div class="row"><span>${esc(t(conn === "wait" ? "st_wait" : "st_off"))}</span></div>`;
+    return;
+  }
+  lcd.className = "lcd";
+  const bpm = S ? S.bpm : measuredBpm();
+  const bpmTxt = bpm == null ? "---" : (S ? bpm : bpm.toFixed(1));
+  const running = S ? S.playing : clock.running;
+  const st = clock.songTick < 0 ? 0 : clock.songTick;
+  const beat = Math.floor(st / 24) % 4, bar = Math.floor(st / 96) + 1;
+
+  if (S && S.menu) {
+    const zone = Math.min(7, Math.floor(S.pot / 128));
+    const modes = T[lang].modes.map((m, i) => {
+      const cls = [i === S.modes[S.menuJack] ? "sel" : "", S.menuArmed ? "" : (i === zone ? "aim" : "")].join(" ").trim();
+      return `<span class="${cls}">${esc(m)}</span>`;
+    }).join("");
+    const held = S.button && S.press === PRESS_MENU;
+    lcd.innerHTML = `<div class="row"><b>${t("menu")} · ${t("jack")} ${S.menuJack + 1}</b><span>${esc(t("places")[S.pos[S.menuJack]])}</span></div>
+      <div class="modes">${modes}</div>
+      <div class="row dim"><span>${esc(held ? t("holdMenu") : (S.menuArmed ? t("menuHelp") : t("turnPot")))}</span></div>
+      <div class="bar"><i style="width:${held ? Math.min(100, (now - pressSince) / LONG_PRESS_MS * 100) : 0}%"></i></div>`;
+    return;
+  }
+  if (S && S.ident >= 0) {
+    const left = Math.max(0, Math.ceil((IDENTIFY_MS - (now - identSince)) / 1000));
+    lcd.innerHTML = `<div class="row"><b>${t("identify")} · ${t("jack")} ${S.ident + 1}</b><span>${left} s</span></div>
+      <div class="bpm">${(clock.freeTick % 24) < 12 ? "● ●" : "○ ○"}</div>
+      <div class="row dim"><span>${esc(t("identHelp"))}</span></div>`;
+    return;
+  }
+  const dots = [0, 1, 2, 3].map(i => `<span class="beat ${running && i === beat ? "on" : ""}"></span>`).join("");
+  const held = S && S.button && S.press === PRESS_STOPPED;
+  const jacks = S ? [0, 1, 2].map(j => [S.pos[j], j]).sort((a, b) => a[0] - b[0])
+    .map(([p, j]) => `${esc(t("places")[p][0])}:${esc(T[lang].modes[S.modes[j]])}`).join("  ") : "";
+  lcd.innerHTML = `<div class="row"><b>${running ? "▶ " + t("playing") : "■ " + t("stopped")}</b><span>${S ? "fw " + S.fw : ""}</span></div>
+    <div class="row" style="align-items:flex-end"><div class="bpm">${bpmTxt}<small>BPM</small></div>
+      <div style="text-align:right"><div class="beats">${dots}</div><div class="dim">${running ? `${t("bar")} ${bar}` : "&nbsp;"}</div></div></div>
+    ${held ? `<div class="bar"><i style="width:${Math.min(100, (now - pressSince) / LONG_PRESS_MS * 100)}%"></i></div><div class="row dim"><span>${esc(t("holdStart"))}</span></div>`
+           : `<div class="row dim"><span>${jacks}</span></div>`}`;
+}
+
+function frame() {
+  const now = performance.now();
+  renderLcd(now);
+  const running = S ? S.playing : clock.running;
+  const st = clock.songTick < 0 ? 0 : clock.songTick;
+
+  // LED, like the firmware
+  let led = false;
+  if (S && S.ident >= 0) led = (clock.freeTick % 24) < 12;
+  else if (S && S.menu) led = jackLevel(S.modes[S.menuJack], clock.freeTick, true, now);
+  else if (running) led = (st % 96) < 6 || (st % 24) < 2;
+  document.getElementById("led").classList.toggle("on", led && conn !== "off");
+
+  // jacks on the virtual box, by physical slot
+  document.querySelectorAll(".jack").forEach(el => {
+    const slot = +el.dataset.slot;
+    const j = S ? S.pos.indexOf(slot) : slot;
+    let on = false;
+    if (S) {
+      if (S.ident >= 0) on = j === S.ident && (clock.freeTick % 24) < 12;
+      else if (S.menu) on = j === S.menuJack && jackLevel(S.modes[j], clock.freeTick, true, now);
+      else on = running && jackLevel(S.modes[j], st, running, now);
+    }
+    el.classList.toggle("on", on);
+    el.classList.toggle("ident", !!S && S.ident === j);
+    el.querySelector(".tag").textContent = S ? `J${j + 1} · ${T[lang].modes[S.modes[j]]}` : "";
+  });
+
+  // MIDI sockets glow while the clock is flowing
+  const flowing = clock.f8.length && now - clock.f8[clock.f8.length - 1] < 200;
+  document.querySelectorAll(".din").forEach(d => d.classList.toggle("act", !!flowing && (clock.freeTick % 24) < 3));
+
+  // pot and button
+  const pot = S ? S.pot : 0;
+  document.getElementById("knob").style.transform = `rotate(${-135 + pot / 1023 * 270}deg)`;
+  const needTurn = S && ((S.menu && !S.menuArmed) || (!S.menu && !S.tempoArmed));
+  document.getElementById("potHint").textContent = needTurn ? "↻ " + t("turnPotShort") : "";
+  const btn = document.getElementById("btn");
+  btn.classList.toggle("down", !!(S && S.button));
+  const holding = S && S.button && (S.press === PRESS_STOPPED || S.press === PRESS_MENU);
+  const frac = holding ? Math.min(1, (now - pressSince) / LONG_PRESS_MS) : 0;
+  document.getElementById("ring").setAttribute("stroke-dasharray", `${frac * 113} 200`);
+
+  renderInfo();
+  requestAnimationFrame(frame);
+}
+
+function renderInfo() {
+  const m = measuredBpm();
+  const rows = [
+    [t("k_fw"), S ? S.fw : "—"],
+    [t("k_bpm"), S ? S.bpm + " BPM" : "—"],
+    [t("k_meas"), m ? m.toFixed(1) + " BPM" : "—"],
+    [t("k_state"), (S ? S.playing : clock.running) ? t("playing") : t("stopped")],
+    [t("k_pot"), S ? S.pot + " / 1023" : "—"],
+    [t("k_btn"), S ? (S.button ? t("down") : t("up")) : "—"],
+  ];
+  const html = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+  const el = document.getElementById("info");
+  if (el.innerHTML !== html) el.innerHTML = html;
+}
+
+let panelKey = "";
+function renderPanel() {
+  const wrap = document.getElementById("jackRows");
+  const enabled = !!S && (conn === "ok" || conn === "demo");
+  // re-render only when something shown here changed (keeps open menus open)
+  const key = [lang, conn, enabled, S && S.modes.join(), S && S.pos.join(), S && S.ident, S && S.playing, S && S.menu].join("|");
+  if (key === panelKey) return;
+  panelKey = key;
+  const canIdent = enabled && !S.playing && !S.menu;
+  const order = S ? [0, 1, 2].sort((a, b) => S.pos[a] - S.pos[b]) : [0, 1, 2];
+  wrap.innerHTML = order.map(j => {
+    const mode = S ? S.modes[j] : -1;
+    const identOn = S && S.ident === j;
+    const places = t("places").map((p, i) => `<option value="${i}" ${S && S.pos[j] === i ? "selected" : ""}>${esc(p)}</option>`).join("");
+    const segs = T[lang].modes.map((m, i) =>
+      `<button data-jack="${j}" data-mode="${i}" aria-pressed="${i === mode}" ${enabled ? "" : "disabled"}>${esc(m)}<span class="d">${esc(T[lang].modeDesc[i])}</span></button>`).join("");
+    return `<div class="jackrow">
+      <div class="head">
+        <span class="name">Jack ${j + 1}<small>${S ? esc(t("places")[S.pos[j]]) : ""}</small></span>
+        <label>${esc(t("place"))} <select data-pos="${j}" ${enabled ? "" : "disabled"}>${places}</select></label>
+        <button data-ident="${j}" class="${identOn ? "ident-on" : ""}" ${canIdent || identOn ? "" : "disabled"} title="${canIdent ? "" : esc(t("identDisabled"))}">${esc(identOn ? t("identStop") : t("identBtn"))}</button>
+      </div>
+      <div class="seg" role="group" aria-label="Jack ${j + 1}">${segs}</div>
+    </div>`;
+  }).join("");
+}
+
+document.getElementById("jackRows").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || !S) return;
+  if (b.dataset.mode != null) send(enc(0x11, +b.dataset.jack, +b.dataset.mode));
+  if (b.dataset.ident != null) send(enc(0x12, S.ident === +b.dataset.ident ? 0x7F : +b.dataset.ident));
+});
+document.getElementById("jackRows").addEventListener("change", e => {
+  const s = e.target.closest("select[data-pos]"); if (!s || !S) return;
+  const j = +s.dataset.pos, p = +s.value, pos = S.pos.slice();
+  const other = pos.indexOf(p); pos[other] = pos[j]; pos[j] = p;   // swap to keep each place unique
+  send(enc(0x13, ...pos));
+});
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.getElementById("lang").value = lang;
+  document.querySelectorAll("[data-t]").forEach(el => {
+    const v = T[lang][el.dataset.t];
+    if (Array.isArray(v)) el.innerHTML = v.map(x => `<li>${x}</li>`).join("");
+    else el.innerHTML = v;
+  });
+  document.title = t("title");
+  setConn(conn); renderPanel();
+}
+document.getElementById("lang").addEventListener("change", e => {
+  lang = e.target.value; try { localStorage.setItem("clockbox.lang", lang); } catch (err) {} applyLang();
+});
+document.getElementById("connect").addEventListener("click", () => {
+  if (!("serial" in navigator)) { document.getElementById("noSerial").hidden = false; return; }
+  connect();
+});
+document.getElementById("demo").addEventListener("click", () => demo ? stopDemo() : startDemo());
+
+applyLang();
+if (!("serial" in navigator)) { document.getElementById("noSerial").hidden = false; document.getElementById("connect").disabled = true; }
+if (location.hash === "#demo") startDemo();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
