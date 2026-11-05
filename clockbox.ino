@@ -19,7 +19,7 @@ void clockOutput96PPQN(uint32_t tick) {
 
 void clockOutput32PPQN(uint32_t tick) {
   if (currentState) {
-    if ((*tick % ANALOG_SYNC_RATIO ) == 0) {
+    if ((tick % ANALOG_SYNC_RATIO) == 0) {
       sendDigitalOut(true);
     } else {
       sendDigitalOut(false);
