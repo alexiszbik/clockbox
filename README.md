@@ -6,7 +6,7 @@ Arduino based clock generator for musical electronic instruments with MIDI and a
 Let's watch a nice little video about what it does : https://youtu.be/OYtPbgozCbE
 
 Original project by Alexis Zbik (2020). Version 2 (2026) adds, with no hardware change:
-- one mode per jack: clocks, triplets, dotted 8th, reset, run, and **Euclidean rhythms**;
+- one mode per jack: clocks, triplets, dotted 8th, reset, run, and **Euclidean rhythms**, with a **probability** per jack;
 - Euclidean rhythms and a **metronome as MIDI notes**, to drive a drum machine;
 - **time signatures**, **Song Position**, **pause/continue**, optional MIDI clock while stopped;
 - **4 presets**, a beat LED, a steadier tempo, a settings menu on the box;
@@ -60,11 +60,12 @@ In pot order in the menu:
 | Euclid A, B, C | Euclidean rhythm A, B or C |
 
 Clock modes have a 50 % duty cycle. On start, all clocks go high together with the MIDI Start.
+Each jack has a probability (0-100 %, default 100) that each pulse is sent; Reset and Run are never random.
 Defaults: jack 1 (top) = 1/16, jack 2 (middle) = Reset, jack 3 (bottom) = 1/8.
 
 ### Euclidean rhythms
 
-Three rhythms (A, B, C), each with steps (1-32), hits, rotation and step length (1/16, 1/8, 1/16 triplet, 1/4). Each one can drive a jack (mode Euclid A/B/C) and/or play a MIDI note (channel, note, velocity). They are set from the screen and saved in the box.
+Three rhythms (A, B, C), each with steps (1-32), hits, rotation, step length (1/16, 1/8, 1/16 triplet, 1/4) and a probability (0-100 %) for each hit to play. Each one can drive a jack (mode Euclid A/B/C) and/or play a MIDI note (channel, note, velocity). They are set from the screen and saved in the box.
 
 ### Settings menu
 
@@ -93,8 +94,8 @@ Boîtier d'horloge pour instruments électroniques : sortie MIDI, 3 jacks clock/
 
 - **Potard** : tempo de 30 à 240 BPM.
 - **Bouton** : en marche, un appui arrête (ou met en pause, en option). À l'arrêt, un appui court lance (au relâchement) ; tenir 1,5 s ouvre le menu.
-- **Jacks** : horloges, triolets, croche pointée, reset, run ou rythmes euclidiens. Jack 1 = haut, jack 2 = milieu, jack 3 = bas. Par défaut : haut = 1/16, milieu = reset, bas = 1/8.
-- **MIDI** : horloge, position de départ, pause et reprise, rythmes euclidiens et métronome en notes MIDI, mesures 4/4, 3/4, 2/4, 5/4, 6/8, 7/8.
+- **Jacks** : horloges, triolets, croche pointée, reset, run ou rythmes euclidiens, avec une probabilité par jack. Jack 1 = haut, jack 2 = milieu, jack 3 = bas. Par défaut : haut = 1/16, milieu = reset, bas = 1/8.
+- **MIDI** : horloge, position de départ, pause et reprise, rythmes euclidiens (avec probabilité) et métronome en notes MIDI, mesures 4/4, 3/4, 2/4, 5/4, 6/8, 7/8.
 - **4 préréglages**, rappelables depuis l'écran ou depuis le menu de la boîte.
 - **Écran dans le navigateur** : ouvre **https://dr-john-8bits.github.io/clockbox/** dans Chrome, clique « Connecter la boîte ». Tout s'affiche en direct, tout se règle à la souris, et le firmware se met à jour en un clic.
 - À compiler avec la bibliothèque uClock **2.3.x**.

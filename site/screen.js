@@ -28,7 +28,9 @@ const T = {
     euclidTitle: "Rythmes euclidiens",
     euclidHelp: "Un rythme euclidien répartit des coups le plus régulièrement possible sur un nombre de pas : 3 coups sur 8 donnent le tresillo, 5 sur 16 une bossa… Chaque rythme peut sortir sur un jack (mode « Euclide A/B/C ») et/ou jouer une note MIDI, pour piloter une boîte à rythme.",
     euSteps: "Pas", euHits: "Coups", euRot: "Rotation", euDiv: "Durée d'un pas", euMidi: "Jouer une note MIDI",
-    euChannel: "Canal", euNote: "Note", euVel: "Vélocité", euUsedBy: "sur le jack", euNoJack: "sur aucun jack",
+    euChannel: "Canal", euNote: "Note", euVel: "Vélocité", prob: "Probabilité",
+    probHelp: "100 % = toujours. En dessous, des impulsions sont sautées au hasard : le rythme change un peu à chaque fois.",
+    probOld: "La probabilité demande le firmware 2.3.", euUsedBy: "sur le jack", euNoJack: "sur aucun jack",
     divs: ["1/16", "1/8", "1/16 triolet", "1/4"],
     midiTitle: "MIDI et mesure",
     timeSig: "Mesure", spp: "Envoyer la position de départ (Song Position) avant Start et Reprendre",
@@ -47,7 +49,7 @@ const T = {
     fwNoHex: "Le fichier du firmware n'est pas disponible ici (page ouverte depuis le disque ?) : choisis un fichier .hex.",
     fwSteps: ["Connexion au bootloader…", "Écriture…", "Vérification…", "Terminé !"],
     fwDone: "Firmware installé. La boîte redémarre.", fwFail: "Échec de la mise à jour : {e}. La boîte n'est pas abîmée : réessaie.",
-    fwSettings: "Après une mise à jour qui change le format des réglages, la boîte repart sur ses réglages d'origine.",
+    fwSettings: "Tes réglages et préréglages sont conservés d'une version à l'autre quand c'est possible (la 2.3 reprend ceux de la 2.2).",
     infoTitle: "État", howTitle: "Rappel des commandes", logTitle: "Journal",
     howList: [
       "<b>Potard</b> : tempo, 30 à 240 BPM.",
@@ -87,7 +89,9 @@ const T = {
     euclidTitle: "Euclidean rhythms",
     euclidHelp: "A Euclidean rhythm spreads hits as evenly as possible over a number of steps: 3 hits over 8 is the tresillo, 5 over 16 a bossa… Each rhythm can go to a jack (mode “Euclid A/B/C”) and/or play a MIDI note, to drive a drum machine.",
     euSteps: "Steps", euHits: "Hits", euRot: "Rotation", euDiv: "Step length", euMidi: "Play a MIDI note",
-    euChannel: "Channel", euNote: "Note", euVel: "Velocity", euUsedBy: "on jack", euNoJack: "on no jack",
+    euChannel: "Channel", euNote: "Note", euVel: "Velocity", prob: "Probability",
+    probHelp: "100 % = always. Below that, pulses are skipped at random: the rhythm changes a little every time.",
+    probOld: "Probability needs firmware 2.3.", euUsedBy: "on jack", euNoJack: "on no jack",
     divs: ["1/16", "1/8", "1/16 triplet", "1/4"],
     midiTitle: "MIDI and time signature",
     timeSig: "Time signature", spp: "Send the song position before Start and Continue",
@@ -106,7 +110,7 @@ const T = {
     fwNoHex: "The firmware file is not available here (page opened from disk?): pick a .hex file.",
     fwSteps: ["Talking to the bootloader…", "Writing…", "Verifying…", "Done!"],
     fwDone: "Firmware installed. The box restarts.", fwFail: "Update failed: {e}. The box is not harmed: try again.",
-    fwSettings: "After an update that changes the settings format, the box goes back to its default settings.",
+    fwSettings: "Your settings and presets are kept from one version to the next whenever possible (2.3 keeps those of 2.2).",
     infoTitle: "Status", howTitle: "Controls", logTitle: "Log",
     howList: [
       "<b>Pot</b>: tempo, 30 to 240 BPM.",
@@ -140,7 +144,7 @@ const BAR24 = [96, 72, 48, 120, 72, 84], BEAT24 = [24, 24, 24, 24, 36, 12];
 const EU_DIV24 = [6, 12, 4, 24];
 const PRESS_STOPPED = 1, PRESS_MENU = 2, PRESS_PAUSED = 3;
 const STOPPED = 0, PLAYING = 1, PAUSED = 2;
-const CONFIG_SIZE = 35;
+const CONFIG_SIZE = 41, CONFIG_SIZE_V22 = 35;
 const GM = { 35: "kick", 36: "kick", 37: "rim", 38: "snare", 39: "clap", 40: "snare 2", 41: "tom", 42: "hat", 44: "pedal hat", 45: "tom", 46: "open hat", 47: "tom", 49: "crash", 50: "tom", 51: "ride", 54: "tamb.", 56: "cowbell", 60: "bongo", 62: "conga", 69: "cabasa", 70: "maracas", 75: "claves", 76: "wood hi", 77: "wood lo" };
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const noteName = n => NOTE_NAMES[n % 12] + (Math.floor(n / 12) - 2);   // 60 = C3
@@ -177,9 +181,11 @@ function decodeState(d) {
     modes: [d[20], d[21], d[22]] };
 }
 
-function decodeConfig(d) {
+function decodeConfig(d, size = CONFIG_SIZE) {
   const c = { jackMode: [d[0], d[1], d[2]], timeSig: d[3], clockWhenStopped: d[4], songPosition: d[5], buttonPauses: d[6],
-    metroMode: d[7], metroChannel: d[8], metroNoteDown: d[9], metroNoteBeat: d[10], euclid: [], presetMask: d[35] || 0 };
+    metroMode: d[7], metroChannel: d[8], metroNoteDown: d[9], metroNoteBeat: d[10], euclid: [], presetMask: d[size] || 0,
+    jackProb: size >= 41 ? [d[35], d[36], d[37]] : [100, 100, 100],
+    euclidProb: size >= 41 ? [d[38], d[39], d[40]] : [100, 100, 100] };
   for (let g = 0; g < 3; g++) {
     const o = 11 + g * 8;
     c.euclid.push({ steps: d[o], hits: d[o + 1], rotation: d[o + 2], division: d[o + 3], midi: d[o + 4],
@@ -192,6 +198,7 @@ function encodeConfig(c) {
   const b = [...c.jackMode, c.timeSig, c.clockWhenStopped, c.songPosition, c.buttonPauses,
     c.metroMode, c.metroChannel, c.metroNoteDown, c.metroNoteBeat];
   for (const e of c.euclid) b.push(e.steps, e.hits, e.rotation, e.division, e.midi, e.channel, e.note, e.velocity);
+  b.push(...c.jackProb, ...c.euclidProb);   // ignored by firmware 2.2
   return b;
 }
 
@@ -229,7 +236,7 @@ function onState(d) {
 
 function onConfig(d) {
   if (configTimer) return;   // a local edit is about to be sent; the box will echo it
-  C = decodeConfig(d);
+  C = decodeConfig(d, S && S.fwNum < 23 ? CONFIG_SIZE_V22 : CONFIG_SIZE);
   if (S) C.jackMode = S.modes.slice();
   renderPanel(); renderSettings();
 }
@@ -245,7 +252,7 @@ function makeParser() {
         inSx = false;
         if (sx[0] === 0x7D && sx[1] === 0x43 && sx[2] === 0x42) {
           if (sx[3] === 0x01 && sx.length >= 24) onState(sx.slice(4));
-          if (sx[3] === 0x02 && sx.length >= 4 + CONFIG_SIZE) onConfig(sx.slice(4));
+          if (sx[3] === 0x02 && sx.length >= 4 + CONFIG_SIZE_V22) onConfig(sx.slice(4));
         }
         return;
       }
@@ -483,6 +490,7 @@ async function flashFromSite() {
 // -------------------------------------------------------------------- demo --
 function defaultConfig() {
   return { jackMode: [1, 6, 2], timeSig: 0, clockWhenStopped: 1, songPosition: 1, buttonPauses: 0,
+    jackProb: [100, 100, 100], euclidProb: [100, 100, 70],
     metroMode: 0, metroChannel: 9, metroNoteDown: 76, metroNoteBeat: 77, presetMask: 0,
     euclid: [{ steps: 16, hits: 5, rotation: 0, division: 0, midi: 1, channel: 9, note: 36, velocity: 110 },
              { steps: 8, hits: 3, rotation: 0, division: 0, midi: 1, channel: 9, note: 38, velocity: 100 },
@@ -506,7 +514,7 @@ function startDemo() {
       const st = clock.songTick;
       demo.C.euclid.forEach((e, g) => {
         const div = EU_DIV24[e.division];
-        if (e.midi && st % div === 0 && euHit(e, Math.floor(st / div) % e.steps)) { clock.notes[g] = now; clock.midiAt = now; }
+        if (e.midi && st % div === 0 && euHit(e, Math.floor(st / div) % e.steps) && Math.random() * 100 < demo.C.euclidProb[g]) { clock.notes[g] = now; clock.midiAt = now; }
       });
     }
     demo.timer = setTimeout(tick, 60000 / (demo.D.bpm * 24));
@@ -521,7 +529,7 @@ function stopDemo() {
 }
 function demoPush() {
   const D = demo.D, b10 = Math.round(D.bpm * 10), p16 = Math.floor(Math.max(0, clock.songTick) / 6);
-  onState([2, 2, b10 >> 7, b10 & 0x7F, D.transport, +D.menu, D.menuPage, D.menuPreset, D.pot >> 7, D.pot & 0x7F,
+  onState([2, 3, b10 >> 7, b10 & 0x7F, D.transport, +D.menu, D.menuPage, D.menuPreset, D.pot >> 7, D.pot & 0x7F,
     +D.button, D.press, +D.tempoArmed, +D.menuArmed, D.ident < 0 ? 0x7F : D.ident, ...D.pos, p16 >> 7, p16 & 0x7F, ...D.modes]);
   const mask = demo.presets.reduce((m, p, i) => m | (p ? 1 << i : 0), 0);
   configTimer = null;
@@ -736,8 +744,10 @@ function renderPanel() {
         <span class="name">Jack ${j + 1}<small>${S ? esc(t("places")[S.pos[j]]) : ""}</small></span>
         <label>${esc(t("place"))} <select data-pos="${j}" ${live ? "" : "disabled"}>${places}</select></label>
         <button data-ident="${j}" class="${identOn ? "ident-on" : ""}" ${canIdent || identOn ? "" : "disabled"} title="${canIdent ? "" : esc(t("identDisabled"))}">${esc(identOn ? t("identStop") : t("identBtn"))}</button>
-      </div>${groups}</div>`;
+      </div>${groups}
+      ${field(t("prob"), `<input type="range" min="0" max="100" step="5" data-jp="${j}" ${live && S.fwNum >= 23 ? "" : "disabled"}><output></output>`)}</div>`;
   }).join("");
+  syncJackProb();
 }
 
 // ---- settings cards (built once, values synced so that editing is never interrupted)
@@ -754,6 +764,7 @@ function buildSettings() {
         ${field(t("euSteps"), `<input type="range" min="1" max="32" data-k="steps"><output></output>`)}
         ${field(t("euHits"), `<input type="range" min="0" max="16" data-k="hits"><output></output>`)}
         ${field(t("euRot"), `<input type="range" min="0" max="15" data-k="rotation"><output></output>`)}
+        ${field(t("prob"), `<input type="range" min="0" max="100" step="5" data-k="prob"><output></output>`)}
         ${field(t("euDiv"), `<select data-k="division">${t("divs").map((d, i) => `<option value="${i}">${esc(d)}</option>`).join("")}</select>`)}
         <label class="chk"><input type="checkbox" data-k="midi"> ${esc(t("euMidi"))}</label>
         <div class="midi-row">
@@ -793,12 +804,13 @@ function renderSettings(force) {
   document.querySelectorAll(".eu").forEach(box => {
     const g = +box.dataset.g, e = C.euclid[g];
     box.querySelectorAll("[data-k]").forEach(el => {
-      const k = el.dataset.k;
+      const k = el.dataset.k, v = k === "prob" ? C.euclidProb[g] : e[k];
       if (k === "hits") el.max = e.steps;
       if (k === "rotation") el.max = Math.max(0, e.steps - 1);
-      setVal(el, e[k]);
+      if (k === "prob") { el.disabled = S.fwNum < 23; el.title = S.fwNum < 23 ? t("probOld") : ""; }
+      setVal(el, v);
       const out = el.nextElementSibling;
-      if (out && out.tagName === "OUTPUT") out.textContent = k === "note" ? noteLabel(e.note, e.channel) : e[k];
+      if (out && out.tagName === "OUTPUT") out.textContent = k === "note" ? noteLabel(e.note, e.channel) : k === "prob" ? v + " %" : v;
     });
     box.querySelector(".midi-row").classList.toggle("off", !e.midi);
     const jacks = C.jackMode.map((m, j) => m === 11 + g ? j : -1).filter(j => j >= 0);
@@ -817,6 +829,7 @@ function renderSettings(force) {
     row.querySelector('[data-pa="2"]').disabled = !filled;
   });
   if (document.activeElement !== $("tempoInput") && S) $("tempoInput").value = fmtBpm(S.bpm);
+  syncJackProb();
   drawRings();
 }
 
@@ -824,15 +837,17 @@ function drawRings() {
   document.querySelectorAll(".eu").forEach(box => {
     const g = +box.dataset.g, svg = box.querySelector(".ring");
     const e = C ? C.euclid[g] : { steps: 16, hits: 0, rotation: 0 };
-    const key = [e.steps, e.hits, e.rotation].join();
+    const prob = C ? C.euclidProb[g] : 100;
+    const key = [e.steps, e.hits, e.rotation, prob].join();
     if (svg.dataset.key === key) return;
     svg.dataset.key = key;
     let html = `<circle r="38" class="track"/>`;
     for (let i = 0; i < e.steps; i++) {
       const a = (i / e.steps) * Math.PI * 2 - Math.PI / 2, x = Math.cos(a) * 38, y = Math.sin(a) * 38;
-      html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${e.steps > 24 ? 3.2 : 4.4}" class="${euHit(e, i) ? "hit" : "rest"}" data-i="${i}"/>`;
+      const hit = euHit(e, i);
+      html += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${e.steps > 24 ? 3.2 : 4.4}" class="${hit ? "hit" : "rest"}" data-i="${i}"${hit && prob < 100 ? ` style="fill-opacity:${(0.25 + 0.75 * prob / 100).toFixed(2)}"` : ""}/>`;
     }
-    html += `<text y="5" class="lbl">${e.hits}/${e.steps}</text>`;
+    html += `<text y="${prob < 100 ? 0 : 5}" class="lbl">${e.hits}/${e.steps}</text>${prob < 100 ? `<text y="13" class="lbl sm">${prob} %</text>` : ""}`;
     svg.innerHTML = html;
   });
 }
@@ -848,6 +863,14 @@ function renderEuclidLive(now) {
   });
 }
 
+function syncJackProb() {
+  document.querySelectorAll("[data-jp]").forEach(el => {
+    const j = +el.dataset.jp, v = C ? C.jackProb[j] : 100;
+    setVal(el, v);
+    el.nextElementSibling.textContent = v + " %";
+  });
+}
+
 // ------------------------------------------------------------------ events --
 $("jackRows").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b || !S) return;
@@ -860,12 +883,18 @@ $("jackRows").addEventListener("change", e => {
   const other = pos.indexOf(p); pos[other] = pos[j]; pos[j] = p;
   send(enc(0x13, ...pos));
 });
+$("jackRows").addEventListener("input", e => {
+  const el = e.target.closest("[data-jp]"); if (!el) return;
+  const j = +el.dataset.jp, v = Math.round(+el.value);
+  el.nextElementSibling.textContent = v + " %";
+  editConfig(c => { c.jackProb[j] = v; });
+});
 $("euclids").addEventListener("input", e => {
   const el = e.target.closest("[data-k]"); if (!el) return;
   const g = +el.closest(".eu").dataset.g, k = el.dataset.k;
   let v = el.type === "checkbox" ? (el.checked ? 1 : 0) : Math.round(+el.value);
   if (k === "note") v = Math.max(0, Math.min(127, v || 0));
-  editConfig(c => { c.euclid[g][k] = v; });
+  editConfig(c => { if (k === "prob") c.euclidProb[g] = v; else c.euclid[g][k] = v; });
 });
 $("midiFields").addEventListener("input", e => {
   const el = e.target.closest("[data-c]"); if (!el) return;

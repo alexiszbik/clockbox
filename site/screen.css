@@ -229,3 +229,5 @@
   .fwbtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
   .pbar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 6px 0; }
   .pbar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 120ms; }
+  .ring .lbl.sm { font-size: 9px; font-weight: 400; fill: var(--muted); }
+  .jackrow .fld { margin-top: 4px; }

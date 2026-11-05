@@ -56,6 +56,12 @@ Chaque jack a son propre **mode**. Voici tous les modes, dans l'ordre où ils d�
 | **Run** | Tension haute tant que ça tourne, 0 V à l'arrêt ou en pause | L'entrée « run » ou « start/stop » de certains séquenceurs |
 | **Euclide A, B, C** | Le rythme euclidien A, B ou C (section 4) | Déclencher une enveloppe, un module de percussion… |
 
+### La probabilité
+Chaque jack a aussi une **probabilité**, de 0 à 100 %, réglable sur l'écran (section 5), sous les modes du jack :
+- **100 %** (réglage d'origine) : toutes les impulsions partent, comme d'habitude ;
+- **en dessous** : chaque impulsion a cette chance de partir. À 50 %, environ une sur deux saute, **au hasard**. Le rythme respire et change un peu à chaque mesure : pratique pour donner de la vie à un charleston ou à une séquence ;
+- **Reset** et **Run** ne sont jamais aléatoires, quelle que soit la probabilité.
+
 > Si ta boîte est câblée autrement, l'écran (section 5) sait le découvrir : le bouton « Identifier » fait battre un seul jack, et tu indiques sa place (haut, milieu, bas). La boîte s'en souvient.
 
 ---
@@ -128,6 +134,7 @@ La boîte a **3 rythmes : A, B et C**. Chacun se règle **sur l'écran** (sectio
 - **Pas** : la longueur du rythme (1 à 32) ;
 - **Coups** : combien de coups dedans ;
 - **Rotation** : décale le rythme, pour commencer ailleurs que sur le premier coup ;
+- **Probabilité** : la chance (0 à 100 %) que chaque coup soit vraiment joué. À 100 %, le rythme est toujours le même ; en dessous, des coups sautent au hasard, sur le jack comme en MIDI. Sur le cercle, les coups pâlissent quand la probabilité baisse ;
 - **Durée d'un pas** : 1/16 (le plus courant), 1/8, 1/16 triolet ou 1/4.
 
 Le cercle dessine le rythme : les points rouges sont les coups, et le point entouré avance en direct pendant que la boîte tourne.
@@ -159,7 +166,7 @@ La boîte n'a pas d'écran, mais l'ordinateur peut en faire un : une page qui af
 
 ### Les réglages
 - **Transport et tempo** : Start, Pause / Reprendre, Stop, Début. Un **tempo précis** au dixième (par exemple 92,5) et un bouton **Tap** pour taper le tempo. Le potard reprend la main dès que tu le bouges.
-- **Les 3 jacks** : clique sur le mode voulu, il est envoyé et **enregistré tout de suite**. « Identifier » fait battre ce jack seul pendant 15 s ; « Place » indique où il est sur la boîte.
+- **Les 3 jacks** : clique sur le mode voulu, il est envoyé et **enregistré tout de suite**. Le curseur **Probabilité** règle la chance que chaque impulsion parte. « Identifier » fait battre ce jack seul pendant 15 s ; « Place » indique où il est sur la boîte.
 - **Rythmes euclidiens** : voir section 4.
 - **MIDI et mesure** :
   - la **mesure** : 4/4, 3/4, 2/4, 5/4, 6/8 ou 7/8 (pour le mode Mesure, le Reset, la LED et le métronome) ;
@@ -167,7 +174,7 @@ La boîte n'a pas d'écran, mais l'ordinateur peut en faire un : une page qui af
   - **envoyer l'horloge même à l'arrêt** : décoche si une vieille machine se met à jouer toute seule dès qu'elle reçoit l'horloge ;
   - **le bouton met en pause** : voir section 1 ;
   - le **métronome MIDI** : une note sur le 1er temps seulement, ou sur chaque temps (le 1er plus fort), avec canal et notes au choix.
-- **Préréglages** : 4 emplacements. « Enregistrer ici » garde **tout** (modes des jacks, rythmes, MIDI, mesure). « Charger » le rappelle, « Effacer » le vide. Un préréglage se rappelle aussi depuis le menu de la boîte (4e page), sans ordinateur.
+- **Préréglages** : 4 emplacements. « Enregistrer ici » garde **tout** (modes des jacks, probabilités, rythmes, MIDI, mesure). « Charger » le rappelle, « Effacer » le vide. Un préréglage se rappelle aussi depuis le menu de la boîte (4e page), sans ordinateur.
 - **Mise à jour du firmware** : voir section 6.
 
 Tous les réglages sont **enregistrés dans la boîte dès que tu les changes**. Tu peux débrancher l'ordinateur et partir en concert : la boîte, alimentée par un chargeur USB, démarre avec tes réglages.
@@ -191,7 +198,7 @@ Le firmware, c'est le programme qui tourne dans la boîte. Quand une nouvelle ve
 
 Si quelque chose se passe mal (câble débranché, par exemple), **la boîte n'est pas abîmée** : la partie qui permet de la mettre à jour ne s'efface jamais. Recommence simplement.
 
-Après une mise à jour qui change le format des réglages, la boîte peut repartir sur ses réglages d'origine : il suffit alors de les refaire sur l'écran.
+Tes réglages et tes préréglages sont normalement conservés d'une version à l'autre (la 2.3 reprend ceux de la 2.2). Si un jour une version ne peut pas les reprendre, la boîte repart sur ses réglages d'origine : il suffit alors de les refaire sur l'écran.
 
 ---
 
