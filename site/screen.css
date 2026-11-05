@@ -171,3 +171,61 @@
   .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 14px; }
   .kv dt { color: var(--muted); } .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
   .log { font: 12px/1.4 "SF Mono", Menlo, monospace; color: var(--muted); max-height: 110px; overflow: auto; white-space: pre-wrap; }
+
+  /* ------------------------------------------------- settings (v2.2) -- */
+  .notice a { color: inherit; }
+  .lcd .row.big { justify-content: center; gap: 2.4cqw; font-size: 3.6cqw; align-items: baseline; }
+  .lcd .row.big .sel { background: var(--lcd-ink); color: var(--lcd-bg); padding: 0 1cqw; border-radius: .5cqw; }
+  .lcd .row.big .dim { font-size: 2.4cqw; }
+  .lcd .beat.first { border-width: .45cqw; }
+  .tbtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 14px; }
+  .tbtns button { min-width: 96px; }
+  .tempo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .tempo label { font-size: 14px; color: var(--muted); }
+  .tempo input { font: 600 18px/1 "SF Mono", Menlo, monospace; width: 5.5em; padding: 7px 10px; border: 1px solid var(--line);
+    border-radius: 8px; background: var(--bg); color: var(--text); }
+  .tempo .tap { min-width: 72px; font-weight: 600; }
+  .grp { margin: 0 0 8px; }
+  .grp .gl { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin: 0 0 4px; }
+  .small { font-size: 13px; color: var(--muted); }
+
+  .settings { max-width: 1180px; margin: 0 auto; padding: 0 24px 24px; display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .settings .wide, .settings .notice { grid-column: 1 / -1; }
+  @media (max-width: 920px) { .settings { grid-template-columns: 1fr; padding: 0 16px 16px; } }
+  .needs-config.disabled { opacity: .55; }
+
+  .euclids { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 920px) { .euclids { grid-template-columns: 1fr; } }
+  .eu { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--bg); transition: box-shadow 60ms; }
+  .eu.sounding { box-shadow: 0 0 0 2px var(--accent); }
+  .eu-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .eu-head b { font-size: 18px; color: var(--accent); }
+  .eu-used { font-size: 12px; color: var(--muted); }
+  .ring { display: block; width: 150px; height: 150px; margin: 4px auto 8px; }
+  .ring .track { fill: none; stroke: var(--line); stroke-width: 1; }
+  .ring .rest { fill: var(--surface); stroke: var(--muted); stroke-width: 1; }
+  .ring .hit { fill: var(--accent); stroke: var(--accent); stroke-width: 1; }
+  .ring .now { stroke: var(--text); stroke-width: 3; }
+  .ring .lbl { font: 600 13px -apple-system, sans-serif; fill: var(--text); text-anchor: middle; }
+  .fld { display: grid; grid-template-columns: 7.5em 1fr auto; align-items: center; gap: 8px; margin: 6px 0; font-size: 13.5px; }
+  .fld span { color: var(--muted); }
+  .fld output { font-variant-numeric: tabular-nums; min-width: 2.2em; text-align: right; font-size: 13px; }
+  .fld output.nn { min-width: 6.5em; text-align: left; color: var(--muted); }
+  .fld input[type="number"] { width: 4.5em; padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; }
+  .fld input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .fld select { padding: 5px 8px; }
+  .chk { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; margin: 8px 0; }
+  .chk input { margin-top: 3px; accent-color: var(--accent); }
+  .midi-row.off { opacity: .45; }
+  .fields .fld { grid-template-columns: 10em 1fr auto; }
+  .preset { display: grid; grid-template-columns: 2em 1fr auto auto auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+  .preset:first-child { border-top: 0; }
+  .preset b { font-size: 16px; }
+  .preset .pst { color: var(--muted); font-size: 13px; }
+  .preset.filled .pst { color: var(--ok); }
+  .preset button { padding: 6px 10px; font-size: 13px; }
+  @media (max-width: 520px) { .preset { grid-template-columns: 2em 1fr; } .preset button { grid-column: span 1; } }
+  .fwbtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .pbar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 6px 0; }
+  .pbar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 120ms; }

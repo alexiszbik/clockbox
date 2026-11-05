@@ -35,6 +35,10 @@ jobs:
           arduino-cli compile --fqbn arduino:avr:nano --warnings default --output-dir build .
           mkdir -p site/firmware
           cp build/clockbox.ino.hex site/firmware/clockbox.hex
+          MAJ=$(grep -oP 'FW_VERSION_MAJOR = \K[0-9]+' clockbox.ino)
+          MIN=$(grep -oP 'FW_VERSION_MINOR = \K[0-9]+' clockbox.ino)
+          echo "{\"version\":\"$MAJ.$MIN\",\"commit\":\"${GITHUB_SHA::7}\"}" > site/firmware/version.json
+          cat site/firmware/version.json
 
       - uses: actions/configure-pages@v5
         if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'

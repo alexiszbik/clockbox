@@ -144,7 +144,7 @@ const uint8_t  PRESET_MAGIC = 0x5A;
 //     14 <config, 35 bytes>   replace the settings (saved)
 //     15 bpmHi bpmLo          tempo in 0.1 BPM (14 bits); the pot takes over when moved
 //     16 action               0 start, 1 stop, 2 pause, 3 continue, 4 back to the start
-//     17 op slot              preset: op 0 = load, 1 = save current settings
+//     17 op slot              preset: op 0 = load, 1 = save current settings, 2 = erase
 //   box -> computer
 //     01 <state>              see sendState()
 //     02 <config> presetMask  current settings, and which preset slots are filled
@@ -653,6 +653,7 @@ static void handleCommand() {
       if (n >= 2 && d[1] < PRESET_COUNT) {
         if (d[0] == 0) loadPreset(d[1]);
         else if (d[0] == 1) savePreset(d[1]);
+        else if (d[0] == 2) { EEPROM.update(EEPROM_PRESETS + d[1] * PRESET_STRIDE, 0); markConfigDirty(); }
       }
       break;
   }
