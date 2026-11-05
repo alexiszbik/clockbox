@@ -119,7 +119,7 @@ La boîte n'a pas d'écran, mais le Mac peut en faire un : une page qui affiche 
 
 ### L'ouvrir
 1. Branche la boîte au Mac avec son câble USB.
-2. Ouvre le fichier **`screen/clockbox-screen.html`** dans **Google Chrome** (ou Microsoft Edge). Safari et Firefox ne savent pas parler au port USB.
+2. Ouvre le site **https://dr-john-8bits.github.io/clockbox/** dans **Google Chrome** (ou Microsoft Edge). Safari et Firefox ne savent pas parler au port USB. Sans internet, le fichier `site/index.html` du projet fait la même chose.
 3. Clique **« Connecter la boîte »**. Dans la liste qui s'ouvre, choisis **« FT232R USB UART »**, puis **« Connexion »**.
 4. La boîte **redémarre une seconde** (elle repasse à l'arrêt) : c'est normal, la puce USB fait ça à chaque connexion. Connecte-toi donc **avant** de jouer, pas en plein morceau.
 5. L'écran s'allume et la pastille en haut passe à « Connecté ».

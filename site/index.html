@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>clockbox — horloge MIDI et modulaire</title>
+<meta name="description" content="La clockbox : une horloge Arduino open source pour synchroniser machines MIDI et synthés modulaires. Avec son écran dans le navigateur.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b1b1b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff3b30'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="screen.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#top">clock<span>box</span></a>
+  <nav aria-label="sections">
+    <a href="#screen" data-t="navScreen">L'écran</a>
+    <a href="#about" data-t="navBox">La boîte</a>
+    <a href="#modes" data-t="navModes">Les modes</a>
+    <a href="#build" data-t="navBuild">Construire</a>
+    <a href="https://github.com/Dr-John-8bits/clockbox" data-t="navCode">GitHub</a>
+  </nav>
+  <select id="lang" aria-label="Langue / language">
+    <option value="fr">Français</option><option value="en">English</option>
+  </select>
+</header>
+
+<section class="hero" id="top">
+  <p class="kicker" data-t="kicker">Projet open source · Arduino · MIDI · Eurorack</p>
+  <h1 data-t="heroTitle">Une horloge commune pour tes machines MIDI et ton modulaire.</h1>
+  <p class="lead" data-t="heroLead"></p>
+  <div class="actions">
+    <span id="status" class="chip">—</span>
+    <button id="connect" class="primary" data-t="connect">Connecter la boîte</button>
+    <button id="demo" data-t="demo">Mode démo</button>
+  </div>
+  <p class="hint" data-t="heroHint"></p>
+</section>
+
+<main id="screen">
+  <div id="noSerial" class="notice" hidden data-t="noSerial"></div>
+  <div id="resetNote" class="notice" hidden data-t="resetNote"></div>
+
+  <section aria-label="clockbox">
+    <div class="box" id="box">
+      <div class="screw" style="left:28%;top:2.5%"></div>
+      <div class="screw" style="left:8%;top:58%"></div>
+      <div class="lcd off" id="lcd" aria-live="polite"></div>
+      <div class="title">clock<span>box</span></div>
+      <div class="led" id="led" title="LED"></div>
+      <div class="pot" id="pot"><div class="skirt"></div><div class="knob" id="knob"><div class="cap"></div></div><div class="hint" id="potHint"></div></div>
+      <div class="btn" id="btn"><svg viewBox="0 0 40 40"><circle id="ring" cx="20" cy="20" r="18" stroke-dasharray="0 200"/></svg><i></i></div>
+      <div class="jack" data-slot="0"><span class="tag"></span></div>
+      <div class="jack" data-slot="1"><span class="tag"></span></div>
+      <div class="jack" data-slot="2"><span class="tag"></span></div>
+      <div class="din a"><div class="plate"></div><div class="hole"></div><span class="lbl">MIDI</span></div>
+      <div class="din b"><div class="plate"></div><div class="hole"></div><span class="lbl">MIDI</span></div>
+    </div>
+    <p class="caption" data-t="boxCaption"></p>
+  </section>
+
+  <section class="panel">
+    <div class="card">
+      <h2 data-t="jacksTitle">Les 3 jacks</h2>
+      <p data-t="jacksHelp"></p>
+      <div id="jackRows"></div>
+    </div>
+    <div class="card">
+      <h2 data-t="infoTitle">État</h2>
+      <dl class="kv" id="info"></dl>
+    </div>
+    <div class="card">
+      <h2 data-t="howTitle">Rappel des commandes</h2>
+      <ul class="help" data-t="howList"></ul>
+    </div>
+    <div class="card">
+      <h2 data-t="logTitle">Journal</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+</main>
+
+<section class="block" id="about">
+  <h2 data-t="boxTitle">Ce que fait la boîte</h2>
+  <p class="intro" data-t="boxIntro"></p>
+  <div class="features" data-t="features"></div>
+</section>
+
+<section class="block" id="modes">
+  <h2 data-t="modesTitle">Les 8 modes des jacks</h2>
+  <p class="intro" data-t="modesIntro"></p>
+  <div class="tablewrap"><table data-t="modesTable"></table></div>
+</section>
+
+<section class="block" id="build">
+  <h2 data-t="buildTitle">Construire la tienne</h2>
+  <div class="two">
+    <div>
+      <h3 data-t="hwTitle">Le matériel</h3>
+      <div class="tablewrap"><table data-t="hwTable"></table></div>
+      <p class="small" data-t="hwNote"></p>
+    </div>
+    <div>
+      <h3 data-t="fwTitle">Le firmware</h3>
+      <ol class="steps" data-t="fwSteps"></ol>
+      <p><a class="button" href="firmware/clockbox.hex" download data-t="fwDownload">Télécharger le firmware (.hex)</a></p>
+      <p class="small" data-t="fwNote"></p>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="credits">
+  <h2 data-t="creditsTitle">L'histoire</h2>
+  <p data-t="credits"></p>
+</section>
+
+<footer class="foot">
+  <p data-t="footer"></p>
+</footer>
+
+<script>
+// Texts of the site around the screen (the screen's own texts are in screen.js)
+window.SITE_T = {
+  fr: {
+    title: "clockbox — horloge MIDI et modulaire",
+    navScreen: "L'écran", navBox: "La boîte", navModes: "Les modes", navBuild: "Construire", navCode: "GitHub",
+    kicker: "Projet open source · Arduino · MIDI · Eurorack",
+    heroTitle: "Une horloge commune pour tes machines MIDI et ton modulaire.",
+    heroLead: "La clockbox envoie le même tempo à deux prises MIDI et à trois sorties clock/gate. Elle a un potard, un bouton, une LED… et ici, <b>l'écran qu'elle n'a pas</b>.",
+    heroHint: "La boîte ci-dessous tourne en démo. Branche la tienne en USB et clique « Connecter la boîte » : tout s'affiche en direct, et ses jacks se règlent à la souris. Il faut Chrome ou Edge.",
+    boxCaption: "Une boîte simulée. Clique le bouton rouge pour start/stop en démo.",
+    boxTitle: "Ce que fait la boîte",
+    boxIntro: "Un Arduino Nano dans un boîtier. Il donne le tempo à tout le monde : synthés, boîtes à rythme et séquenceurs MIDI d'un côté, modules Eurorack de l'autre.",
+    features: `
+      <div class="feat"><h3>Horloge MIDI</h3><p>24 impulsions par noire, en continu, sur 2 prises MIDI. Start et Stop au bouton. Tes machines suivent le tempo même à l'arrêt.</p></div>
+      <div class="feat"><h3>3 sorties clock/gate</h3><p>Chaque jack a son mode : 24 ppqn, doubles croches, croches, noires, blanches, mesure, Reset ou Run.</p></div>
+      <div class="feat"><h3>Reset au départ</h3><p>Une impulsion juste avant le premier coup d'horloge : ton séquenceur modulaire repart au pas 1 en même temps que tes machines MIDI.</p></div>
+      <div class="feat"><h3>Tempo stable</h3><p>De 30 à 240 BPM au potard, filtré, par pas de 1 BPM : il ne tremble pas.</p></div>
+      <div class="feat"><h3>LED de tempo</h3><p>Flash long sur le 1er temps, court sur les autres, éteinte à l'arrêt.</p></div>
+      <div class="feat"><h3>Un menu sans écran</h3><p>Bouton tenu 1,5 s à l'arrêt : la LED indique le jack, le potard choisit le mode. Les réglages restent à l'extinction.</p></div>`,
+    modesTitle: "Les 8 modes des jacks",
+    modesIntro: "Les modes d'horloge ont un rapport cyclique de 50 %. Au Start, toutes les horloges montent en même temps que le Start MIDI. Réglage d'origine : haut = 1/16, milieu = Reset, bas = 1/8.",
+    modesTable: `<thead><tr><th>Mode</th><th>Signal</th><th>Pour quoi faire</th></tr></thead><tbody>
+      <tr><td>24 ppqn</td><td>24 impulsions par noire</td><td>Synchro DIN des boîtes à rythme Roland, Korg…</td></tr>
+      <tr><td>1/16</td><td>4 par noire (doubles croches)</td><td>L'entrée clock de la plupart des séquenceurs modulaires</td></tr>
+      <tr><td>1/8</td><td>2 par noire (croches)</td><td>Korg Volca, Pocket Operator</td></tr>
+      <tr><td>1/4</td><td>1 par noire</td><td>Un battement par temps</td></tr>
+      <tr><td>1/2</td><td>1 toutes les 2 noires</td><td></td></tr>
+      <tr><td>Mesure</td><td>1 par mesure de 4 temps</td><td>Déclencher quelque chose à chaque mesure</td></tr>
+      <tr><td>Reset</td><td>Une impulsion de 10 ms au Start</td><td>L'entrée reset d'un séquenceur : retour au pas 1</td></tr>
+      <tr><td>Run</td><td>Haut tant que ça tourne</td><td>L'entrée run ou start/stop de certains séquenceurs</td></tr></tbody>`,
+    buildTitle: "Construire la tienne",
+    hwTitle: "Le matériel",
+    hwTable: `<thead><tr><th>Élément</th><th>Broche</th></tr></thead><tbody>
+      <tr><td>Arduino Nano ou Uno (ATmega328P)</td><td>—</td></tr>
+      <tr><td>Potard de tempo</td><td>A0</td></tr>
+      <tr><td>Bouton poussoir, actif à l'état haut (résistance de rappel à la masse)</td><td>D2</td></tr>
+      <tr><td>LED</td><td>D9</td></tr>
+      <tr><td>Jacks 1, 2, 3 (haut, milieu, bas)</td><td>D5, D7, D3</td></tr>
+      <tr><td>Sortie MIDI (les 2 prises en parallèle)</td><td>TX (D1)</td></tr></tbody>`,
+    hwNote: "Les broches se changent en haut de <code>clockbox.ino</code>. Pour les prises MIDI, suis le schéma classique de sortie MIDI d'un Arduino.",
+    fwTitle: "Le firmware",
+    fwSteps: `<li>Installe l'IDE Arduino et, dans le gestionnaire de bibliothèques, <b>uClock</b> en version <b>2.3</b>.</li>
+      <li>Ouvre <code>clockbox.ino</code>, choisis la carte Arduino Nano et téléverse.</li>
+      <li>Ou flashe directement le fichier <code>.hex</code> ci-dessous, compilé automatiquement à chaque mise à jour du code.</li>`,
+    fwDownload: "Télécharger le firmware (.hex)",
+    fwNote: "Avant de flasher une boîte existante, sauvegarde son programme : la commande est dans le <a href=\"https://github.com/Dr-John-8bits/clockbox/blob/master/MODE_D_EMPLOI.md\">mode d'emploi</a>.",
+    creditsTitle: "L'histoire",
+    credits: "La clockbox a été imaginée et construite en 2020 par <b>Alexis Zbik</b> (<a href=\"https://github.com/alexiszbik/clockbox\">projet original</a>, <a href=\"https://youtu.be/OYtPbgozCbE\">vidéo de présentation</a>). En 2026, la v2 ajoute les modes par jack, le reset, la LED de tempo, le menu et cet écran, sans toucher au matériel. Elle s'appuie sur la bibliothèque <a href=\"https://github.com/midilab/uClock\">uClock</a> de midilab. Le <a href=\"https://github.com/Dr-John-8bits/clockbox/blob/master/MODE_D_EMPLOI.md\">mode d'emploi détaillé</a> explique tout pas à pas.",
+    footer: "clockbox · <a href=\"https://github.com/Dr-John-8bits/clockbox\">code source sur GitHub</a>",
+  },
+  en: {
+    title: "clockbox — MIDI and modular clock",
+    navScreen: "Screen", navBox: "The box", navModes: "Modes", navBuild: "Build", navCode: "GitHub",
+    kicker: "Open source project · Arduino · MIDI · Eurorack",
+    heroTitle: "One clock for your MIDI gear and your modular.",
+    heroLead: "The clockbox sends the same tempo to two MIDI outputs and three clock/gate jacks. It has a pot, a button, an LED… and here, <b>the screen it does not have</b>.",
+    heroHint: "The box below is running in demo mode. Plug yours in over USB and click “Connect the box”: everything shows live, and its jacks can be set with the mouse. Needs Chrome or Edge.",
+    boxCaption: "A simulated box. Click the red button to start/stop in demo mode.",
+    boxTitle: "What the box does",
+    boxIntro: "An Arduino Nano in a box. It gives the tempo to everyone: MIDI synths, drum machines and sequencers on one side, Eurorack modules on the other.",
+    features: `
+      <div class="feat"><h3>MIDI clock</h3><p>24 pulses per quarter note, all the time, on 2 MIDI outputs. Start and Stop from the button. Your gear follows the tempo even when stopped.</p></div>
+      <div class="feat"><h3>3 clock/gate outputs</h3><p>Each jack has its own mode: 24 ppqn, 16ths, 8ths, quarters, halves, bar, Reset or Run.</p></div>
+      <div class="feat"><h3>Reset on start</h3><p>A pulse just before the first clock: your modular sequencer goes back to step 1 together with your MIDI gear.</p></div>
+      <div class="feat"><h3>Steady tempo</h3><p>30 to 240 BPM from the pot, filtered, in 1 BPM steps: it does not wobble.</p></div>
+      <div class="feat"><h3>Beat LED</h3><p>Long flash on beat 1, short on the others, off when stopped.</p></div>
+      <div class="feat"><h3>A menu without a screen</h3><p>Hold the button 1.5 s while stopped: the LED shows the jack, the pot picks the mode. Settings survive power-off.</p></div>`,
+    modesTitle: "The 8 jack modes",
+    modesIntro: "Clock modes have a 50 % duty cycle. On start, every clock goes high together with the MIDI Start. Defaults: top = 1/16, middle = Reset, bottom = 1/8.",
+    modesTable: `<thead><tr><th>Mode</th><th>Signal</th><th>Use</th></tr></thead><tbody>
+      <tr><td>24 ppqn</td><td>24 pulses per quarter</td><td>DIN sync for Roland, Korg… drum machines</td></tr>
+      <tr><td>1/16</td><td>4 per quarter (16th notes)</td><td>The clock input of most modular sequencers</td></tr>
+      <tr><td>1/8</td><td>2 per quarter (8th notes)</td><td>Korg Volca, Pocket Operator</td></tr>
+      <tr><td>1/4</td><td>1 per quarter</td><td>One pulse per beat</td></tr>
+      <tr><td>1/2</td><td>1 every 2 quarters</td><td></td></tr>
+      <tr><td>Bar</td><td>1 per 4/4 bar</td><td>Trigger something every bar</td></tr>
+      <tr><td>Reset</td><td>A 10 ms pulse on start</td><td>A sequencer's reset input: back to step 1</td></tr>
+      <tr><td>Run</td><td>High while running</td><td>The run or start/stop input of some sequencers</td></tr></tbody>`,
+    buildTitle: "Build your own",
+    hwTitle: "Hardware",
+    hwTable: `<thead><tr><th>Part</th><th>Pin</th></tr></thead><tbody>
+      <tr><td>Arduino Nano or Uno (ATmega328P)</td><td>—</td></tr>
+      <tr><td>Tempo pot</td><td>A0</td></tr>
+      <tr><td>Push button, active high (pull-down resistor)</td><td>D2</td></tr>
+      <tr><td>LED</td><td>D9</td></tr>
+      <tr><td>Jacks 1, 2, 3 (top, middle, bottom)</td><td>D5, D7, D3</td></tr>
+      <tr><td>MIDI out (both sockets in parallel)</td><td>TX (D1)</td></tr></tbody>`,
+    hwNote: "Pins can be changed at the top of <code>clockbox.ino</code>. For the MIDI sockets, follow the usual Arduino MIDI out circuit.",
+    fwTitle: "Firmware",
+    fwSteps: `<li>Install the Arduino IDE and, from the Library Manager, <b>uClock</b> version <b>2.3</b>.</li>
+      <li>Open <code>clockbox.ino</code>, pick the Arduino Nano board and upload.</li>
+      <li>Or flash the <code>.hex</code> file below, built automatically on every code update.</li>`,
+    fwDownload: "Download the firmware (.hex)",
+    fwNote: "Before flashing an existing box, back up its program: the command is in the <a href=\"https://github.com/Dr-John-8bits/clockbox/blob/master/MODE_D_EMPLOI.md\">user guide</a> (French).",
+    creditsTitle: "The story",
+    credits: "The clockbox was designed and built in 2020 by <b>Alexis Zbik</b> (<a href=\"https://github.com/alexiszbik/clockbox\">original project</a>, <a href=\"https://youtu.be/OYtPbgozCbE\">demo video</a>). In 2026, v2 adds per-jack modes, reset, the beat LED, the menu and this screen, with no hardware change. It is built on the <a href=\"https://github.com/midilab/uClock\">uClock</a> library by midilab. The <a href=\"https://github.com/Dr-John-8bits/clockbox/blob/master/MODE_D_EMPLOI.md\">detailed user guide</a> (French) explains everything step by step.",
+    footer: "clockbox · <a href=\"https://github.com/Dr-John-8bits/clockbox\">source code on GitHub</a>",
+  }
+};
+</script>
+<script src="screen.js"></script>
+</body>
+</html>

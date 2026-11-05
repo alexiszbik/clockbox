@@ -20,7 +20,7 @@
  *                    short press = next jack, hold 1.5 s = save and quit.
  *   LED ............ running: long flash on beat 1, short on beats 2-4. Stopped: off.
  *
- * Screen on a computer (screen/clockbox-screen.html, Chrome/Edge over USB):
+ * Screen on a computer (https://dr-john-8bits.github.io/clockbox/ or site/index.html, Chrome/Edge over USB):
  *   The box stays silent until the page says hello. Then it reports its state
  *   (tempo, transport, pot, button, menu, jack modes) as SysEx when something
  *   changes, and accepts new jack modes from the page. See PROTOCOL below.

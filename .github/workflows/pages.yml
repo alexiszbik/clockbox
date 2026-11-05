@@ -1,0 +1,57 @@
+# Builds the firmware and publishes the website (site/) on GitHub Pages.
+# Pull requests only check that the firmware builds.
+name: Firmware and website
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: arduino/setup-arduino-cli@v2
+
+      - name: Install the AVR core and uClock 2.3.0
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+          arduino-cli lib install "uClock@2.3.0"
+
+      - name: Build the firmware (Arduino Nano)
+        run: |
+          arduino-cli compile --fqbn arduino:avr:nano --warnings default --output-dir build .
+          mkdir -p site/firmware
+          cp build/clockbox.ino.hex site/firmware/clockbox.hex
+
+      - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

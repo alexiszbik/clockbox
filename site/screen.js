@@ -1,239 +1,3 @@
-<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clockbox Screen</title>
-<style>
-  :root {
-    --bg: #ece6dc;
-    --surface: #fbf8f3;
-    --text: #22201c;
-    --muted: #6d675e;
-    --line: #d8d0c3;
-    --accent: #c8323c;
-    --accent-soft: #f6dcdc;
-    --ok: #2f7d4f;
-    --warn: #a86a00;
-    --box: #1b1b1b;
-    --box-edge: #0c0c0c;
-    --metal: #c9c9c9;
-    --lcd-bg: #9fb87a;
-    --lcd-ink: #1d2a12;
-    --lcd-dim: #7f9a5c;
-    --led-off: #4a1010;
-    --led-on: #ff3b30;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #141414; --surface: #1e1e1e; --text: #ece9e4; --muted: #a29d94;
-      --line: #34322f; --accent: #ff5a5f; --accent-soft: #3a1f21; --ok: #5cc98a; --warn: #e0a33a;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #141414; --surface: #1e1e1e; --text: #ece9e4; --muted: #a29d94;
-    --line: #34322f; --accent: #ff5a5f; --accent-soft: #3a1f21; --ok: #5cc98a; --warn: #e0a33a;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
-  header {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
-    padding: 16px 24px; border-bottom: 1px solid var(--line); background: var(--surface);
-  }
-  header h1 { font-size: 18px; margin: 0 auto 0 0; letter-spacing: .2px; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
-    border-radius: 999px; border: 1px solid var(--line); font-size: 13px; color: var(--muted);
-  }
-  .chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-  .chip.ok { color: var(--ok); border-color: var(--ok); } .chip.ok::before { background: var(--ok); }
-  .chip.wait { color: var(--warn); border-color: var(--warn); } .chip.wait::before { background: var(--warn); }
-  button, select {
-    font: inherit; color: inherit; background: var(--surface);
-    border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer;
-  }
-  button:hover:not(:disabled), select:hover:not(:disabled) { border-color: var(--muted); }
-  button:disabled, select:disabled { opacity: .45; cursor: not-allowed; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  main {
-    display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 28px;
-    max-width: 1180px; margin: 0 auto; padding: 24px;
-  }
-  @media (max-width: 920px) { main { grid-template-columns: 1fr; padding: 16px; } }
-  .notice {
-    grid-column: 1 / -1; padding: 12px 16px; border-radius: 10px;
-    background: var(--accent-soft); border: 1px solid var(--accent); font-size: 14px;
-  }
-  .notice[hidden] { display: none; }
-
-  /* ---------------------------------------------------------- the box -- */
-  .box {
-    position: relative; aspect-ratio: 1.36; width: 100%;
-    background: radial-gradient(120% 90% at 30% 20%, #2a2a2a, var(--box) 60%);
-    border-radius: 18px; border: 3px solid var(--box-edge);
-    box-shadow: 0 18px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
-    container-type: inline-size;
-  }
-  .screw { position: absolute; width: 3.2cqw; height: 3.2cqw; border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #777, #222); }
-  .screw::after { content: ""; position: absolute; inset: 45% 15%; background: #111; transform: rotate(35deg); }
-  .title {
-    position: absolute; left: 7%; top: 30%; width: 46%;
-    font-family: "Marker Felt", "Chalkboard SE", "Comic Sans MS", cursive;
-    color: #e0484f; font-size: 11.5cqw; line-height: .95; text-align: left;
-    -webkit-text-stroke: .35cqw #f2ecec; paint-order: stroke fill; letter-spacing: .5cqw;
-    pointer-events: none;
-  }
-  .title span { display: block; padding-left: 40%; }
-
-  .lcd {
-    position: absolute; left: 5%; top: 5%; width: 46%; height: 24%;
-    background: var(--lcd-bg); border-radius: 1.2cqw; border: .9cqw solid #2c2c2c;
-    box-shadow: inset 0 0 2.5cqw rgba(0,0,0,.35);
-    color: var(--lcd-ink); padding: 1cqw 1.6cqw;
-    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 2.2cqw; line-height: 1.25;
-    display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
-  }
-  .lcd .row { display: flex; justify-content: space-between; gap: 1cqw; white-space: nowrap; }
-  .lcd .bpm { font-size: 5.6cqw; font-weight: 700; line-height: 1; letter-spacing: -.2cqw; }
-  .lcd .bpm small { font-size: 2.3cqw; font-weight: 600; letter-spacing: 0; margin-left: .6cqw; }
-  .lcd .dim { color: var(--lcd-dim); }
-  .lcd .beats { display: flex; gap: .9cqw; align-items: center; }
-  .lcd .beat { width: 2cqw; height: 2cqw; border-radius: 50%; border: .3cqw solid var(--lcd-ink); }
-  .lcd .beat.on { background: var(--lcd-ink); }
-  .lcd .modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: .2cqw .6cqw; font-size: 1.95cqw; }
-  .lcd .modes span { padding: 0 .4cqw; border-radius: .4cqw; white-space: nowrap; overflow: hidden; }
-  .lcd .row span { overflow: hidden; text-overflow: ellipsis; }
-  .lcd .modes span.sel { background: var(--lcd-ink); color: var(--lcd-bg); }
-  .lcd .modes span.aim { outline: .3cqw dashed var(--lcd-ink); }
-  .lcd .bar { height: 1cqw; background: var(--lcd-dim); border-radius: .5cqw; overflow: hidden; }
-  .lcd .bar i { display: block; height: 100%; background: var(--lcd-ink); width: 0; }
-  .lcd.off { background: #6e7a5e; color: #4b5640; }
-
-  .led {
-    position: absolute; left: 21%; top: 63%; width: 3.6cqw; height: 3.6cqw; border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #7a2a2a, var(--led-off)); border: .4cqw solid #333;
-    transition: background 40ms, box-shadow 40ms;
-  }
-  .led.on { background: radial-gradient(circle at 35% 30%, #ffb0a8, var(--led-on));
-    box-shadow: 0 0 3cqw 1cqw rgba(255,59,48,.55); }
-
-  .pot { position: absolute; left: 11%; top: 74%; width: 15cqw; height: 15cqw; }
-  .pot .skirt { position: absolute; inset: 0; border-radius: 50%;
-    background: conic-gradient(from 0deg, #111, #2a2a2a, #111, #2a2a2a, #111); box-shadow: 0 .8cqw 1.5cqw rgba(0,0,0,.6); }
-  .pot .cap { position: absolute; inset: 22%; border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #f4f4f4, #a9a9a9 70%); }
-  .pot .knob { position: absolute; inset: 0; transition: transform 60ms linear; }
-  .pot .knob::after { content: ""; position: absolute; left: 48%; top: 4%; width: 4%; height: 20%; background: #fff; border-radius: 1cqw; }
-  .pot .hint { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: .6cqw;
-    font-size: 2.2cqw; color: #f5d36b; white-space: nowrap; }
-
-  .btn {
-    position: absolute; left: 36%; top: 77%; width: 8.5cqw; height: 8.5cqw; border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #eee, #8a8a8a); display: grid; place-items: center;
-  }
-  .btn i { width: 60%; height: 60%; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #ff6b6b, #b5121b);
-    box-shadow: 0 .5cqw 0 #6d0b10; transition: transform 50ms, box-shadow 50ms; }
-  .btn.down i { transform: translateY(.45cqw); box-shadow: 0 .05cqw 0 #6d0b10; }
-  .btn svg { position: absolute; inset: -1.6cqw; width: calc(100% + 3.2cqw); height: calc(100% + 3.2cqw); transform: rotate(-90deg); }
-  .btn svg circle { fill: none; stroke: #f5d36b; stroke-width: 3; stroke-linecap: round; }
-
-  .jack { position: absolute; left: 55%; width: 9.5cqw; height: 9.5cqw; border-radius: 50%;
-    background: radial-gradient(circle, #050505 34%, #8e8e8e 36%, #e3e3e3 52%, #9a9a9a 70%, #5a5a5a 72%); }
-  .jack::after { content: ""; position: absolute; inset: 22%; border-radius: 50%; box-shadow: 0 0 0 0 transparent; transition: box-shadow 40ms; }
-  .jack.on::after { box-shadow: 0 0 2.4cqw 1.1cqw rgba(245,211,107,.85); }
-  .jack.ident { outline: .5cqw dashed #f5d36b; outline-offset: 1cqw; }
-  .jack .tag { position: absolute; left: 50%; top: 104%; transform: translateX(-50%);
-    font-size: 2.2cqw; color: #eee; background: rgba(0,0,0,.55); padding: .3cqw 1cqw; border-radius: .8cqw; white-space: nowrap; }
-  .jack[data-slot="0"] { top: 7%; } .jack[data-slot="1"] { top: 38%; } .jack[data-slot="2"] { top: 69%; }
-
-  .din { position: absolute; left: 73%; width: 16cqw; height: 13cqw; }
-  .din .plate { position: absolute; inset: 0; border-radius: 50% / 50%; background: linear-gradient(#ddd, #9b9b9b); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
-  .din .hole { position: absolute; inset: 17% 22%; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #2c2c2c, #050505); }
-  .din .lbl { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); font-size: 2cqw; color: #bbb; white-space: nowrap; }
-  .din.a { top: 8%; } .din.b { top: 70%; }
-  .din.act .hole { box-shadow: 0 0 1.4cqw .3cqw rgba(120,200,255,.6); }
-
-  /* -------------------------------------------------------- the panel -- */
-  .panel { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
-  .card h2 { font-size: 15px; margin: 0 0 4px; }
-  .card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
-  .jackrow { border-top: 1px solid var(--line); padding: 14px 0 6px; }
-  .jackrow:first-of-type { border-top: 0; padding-top: 4px; }
-  .jackrow .head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .jackrow .name { font-weight: 650; margin-right: auto; }
-  .jackrow .name small { color: var(--muted); font-weight: 400; margin-left: 6px; }
-  .seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-  .seg button { padding: 7px 4px; font-size: 13px; text-align: center; }
-  .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  .seg button .d { display: block; font-size: 11px; opacity: .75; font-weight: 400; }
-  .ident-on { border-color: var(--warn) !important; color: var(--warn) !important; }
-  .help { font-size: 13.5px; color: var(--muted); }
-  .help li { margin: 4px 0; }
-  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 14px; }
-  .kv dt { color: var(--muted); } .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
-  .log { font: 12px/1.4 "SF Mono", Menlo, monospace; color: var(--muted); max-height: 110px; overflow: auto; white-space: pre-wrap; }
-</style>
-</head>
-<body>
-<header>
-  <h1 data-t="title">Clockbox — écran</h1>
-  <span id="status" class="chip">—</span>
-  <button id="connect" class="primary" data-t="connect">Connecter la boîte</button>
-  <button id="demo" data-t="demo">Mode démo</button>
-  <select id="lang" aria-label="Langue / language">
-    <option value="fr">Français</option><option value="en">English</option>
-  </select>
-</header>
-
-<main>
-  <div id="noSerial" class="notice" hidden data-t="noSerial"></div>
-  <div id="resetNote" class="notice" hidden data-t="resetNote"></div>
-
-  <section aria-label="clockbox">
-    <div class="box" id="box">
-      <div class="screw" style="left:28%;top:2.5%"></div>
-      <div class="screw" style="left:8%;top:58%"></div>
-      <div class="lcd off" id="lcd" aria-live="polite"></div>
-      <div class="title">clock<span>box</span></div>
-      <div class="led" id="led" title="LED"></div>
-      <div class="pot" id="pot"><div class="skirt"></div><div class="knob" id="knob"><div class="cap"></div></div><div class="hint" id="potHint"></div></div>
-      <div class="btn" id="btn"><svg viewBox="0 0 40 40"><circle id="ring" cx="20" cy="20" r="18" stroke-dasharray="0 200"/></svg><i></i></div>
-      <div class="jack" data-slot="0"><span class="tag"></span></div>
-      <div class="jack" data-slot="1"><span class="tag"></span></div>
-      <div class="jack" data-slot="2"><span class="tag"></span></div>
-      <div class="din a"><div class="plate"></div><div class="hole"></div><span class="lbl">MIDI</span></div>
-      <div class="din b"><div class="plate"></div><div class="hole"></div><span class="lbl">MIDI</span></div>
-    </div>
-  </section>
-
-  <section class="panel">
-    <div class="card">
-      <h2 data-t="jacksTitle">Les 3 jacks</h2>
-      <p data-t="jacksHelp">Clique un mode pour l'envoyer à la boîte (enregistré tout de suite). « Identifier » fait battre ce jack seul pendant 15 s : regarde lequel réagit sur ton module, puis choisis sa place.</p>
-      <div id="jackRows"></div>
-    </div>
-    <div class="card">
-      <h2 data-t="infoTitle">État</h2>
-      <dl class="kv" id="info"></dl>
-    </div>
-    <div class="card">
-      <h2 data-t="howTitle">Rappel des commandes</h2>
-      <ul class="help" data-t="howList"></ul>
-    </div>
-    <div class="card">
-      <h2 data-t="logTitle">Journal</h2>
-      <div class="log" id="log"></div>
-    </div>
-  </section>
-</main>
-
-<script>
 "use strict";
 // ------------------------------------------------------------------- text --
 const T = {
@@ -294,6 +58,8 @@ const T = {
     modeDesc: ["DIN sync", "16th notes", "8th notes", "quarters", "halves", "1 per bar", "on start", "gate"],
   }
 };
+// merge the texts of the page around the screen, if any
+if (window.SITE_T) for (const l in window.SITE_T) Object.assign(T[l], window.SITE_T[l]);
 let lang = "fr";
 try { lang = localStorage.getItem("clockbox.lang") || (navigator.language.startsWith("fr") ? "fr" : "en"); } catch (e) {}
 const t = k => T[lang][k];
@@ -432,7 +198,7 @@ function startDemo() {
   // a simulated box, with its own state (the page only sees what it "sends")
   demo = {
     timer: null, playTimer: null, identTimer: null,
-    D: { bpm: 120, playing: false, menu: false, menuJack: 0, modes: [1, 2, 6], pot: 384,
+    D: { bpm: 120, playing: false, menu: false, menuJack: 0, modes: [1, 6, 2], pot: 384,
          button: false, press: 0, tempoArmed: true, menuArmed: false, ident: -1, pos: [0, 1, 2] },
   };
   setConn("demo"); log("démo : la boîte est simulée — clique le bouton rouge pour start/stop");
@@ -661,8 +427,5 @@ document.getElementById("demo").addEventListener("click", () => demo ? stopDemo(
 
 applyLang();
 if (!("serial" in navigator)) { document.getElementById("noSerial").hidden = false; document.getElementById("connect").disabled = true; }
-if (location.hash === "#demo") startDemo();
+startDemo();   // the home page shows the box running; connecting replaces the demo
 requestAnimationFrame(frame);
-</script>
-</body>
-</html>

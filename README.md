@@ -1,6 +1,8 @@
 # clockbox
 Arduino based clock generator for musical electronic instruments with MIDI and analog clock outputs.
 
+**Website and live screen: https://dr-john-8bits.github.io/clockbox/**
+
 Let's watch a nice little video about what it does : https://youtu.be/OYtPbgozCbE
 
 Original project by Alexis Zbik (2020). Version 2 (2026) adds one division per jack, reset/run outputs, a beat LED, a steadier tempo, a settings menu and a **screen on your computer** over USB. No hardware change is needed.
@@ -58,7 +60,7 @@ After the menu, the tempo stays where it was until you move the pot.
 
 ### Screen on your computer
 
-Open `screen/clockbox-screen.html` in Chrome or Edge (Web Serial), click **Connect the box** and pick the USB serial port. The page draws the box with a screen: tempo, transport, beat and bar, the pot, the button (with the long-press countdown), the menu, and the jack outputs, all live. Jack modes can be set with the mouse, and **Identify** makes a single jack pulse so you can find which hole is which, then save its place.
+Open **https://dr-john-8bits.github.io/clockbox/** in Chrome or Edge (Web Serial; `site/index.html` also works offline), click **Connect the box** and pick the USB serial port. The page draws the box with a screen: tempo, transport, beat and bar, the pot, the button (with the long-press countdown), the menu, and the jack outputs, all live. Jack modes can be set with the mouse, and **Identify** makes a single jack pulse so you can find which hole is which, then save its place.
 
 - The box restarts once when the page connects (USB-serial DTR reset): connect before playing.
 - The box sends nothing extra until the page says hello. While connected, status messages are SysEx (manufacturer ID `0x7D`), also present on the MIDI outputs. The protocol is described at the top of `clockbox.ino`.
@@ -75,5 +77,5 @@ Boîtier d'horloge pour instruments électroniques : sortie MIDI clock, 3 jacks 
 - **LED** : en marche, flash long sur le 1er temps et court sur les autres. À l'arrêt, éteinte.
 - **Menu** : la LED fait 1, 2 ou 3 éclairs rapides (numéro du jack), puis clignote au rythme du mode choisi. Le potard choisit le mode, de gauche à droite : 24 ppqn, 1/16, 1/8, 1/4, 1/2, mesure, reset, run. Appui court = jack suivant, tenir 1,5 s = enregistrer et quitter.
 - Jack 1 = haut, jack 2 = milieu, jack 3 = bas. Réglages par défaut : haut = 1/16, milieu = reset, bas = 1/8.
-- **Écran sur le Mac** : ouvre `screen/clockbox-screen.html` dans Chrome, clique « Connecter la boîte ». Tout s'affiche en direct, et les jacks se règlent à la souris.
+- **Écran sur le Mac** : ouvre **https://dr-john-8bits.github.io/clockbox/** dans Chrome, clique « Connecter la boîte ». Tout s'affiche en direct, et les jacks se règlent à la souris.
 - À compiler avec la bibliothèque uClock **2.3.x**.
