@@ -1,10 +1,9 @@
 # Builds the firmware and publishes the website (site/) on GitHub Pages.
-# Pull requests only check that the firmware builds.
+# Other branches and pull requests only check that the firmware builds.
 name: Firmware and website
 
 on:
   push:
-    branches: [master]
   pull_request:
   workflow_dispatch:
 
@@ -38,15 +37,15 @@ jobs:
           cp build/clockbox.ino.hex site/firmware/clockbox.hex
 
       - uses: actions/configure-pages@v5
-        if: github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
 
       - uses: actions/upload-pages-artifact@v3
-        if: github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
         with:
           path: site
 
   deploy:
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
